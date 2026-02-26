@@ -69,11 +69,16 @@ class OpenAIImageGen(ImageGenProvider):
             return "1024x1536"
         return "1024x1024"
 
+    # OpenAI only supports 1024x1024, 1536x1024, 1024x1536.
+    # Map all aspect ratios to the closest supported size.
     _RATIO_TO_SIZE = {
+        "21:9": "1536x1024",
         "16:9": "1536x1024",
+        "4:3": "1536x1024",
         "3:2": "1536x1024",
         "1:1": "1024x1024",
         "2:3": "1024x1536",
+        "3:4": "1024x1536",
         "9:16": "1024x1536",
     }
 

@@ -120,7 +120,8 @@ async def generate_diagram(
         source_context: Methodology section text or relevant paper excerpt.
         caption: Figure caption describing what the diagram should communicate.
         iterations: Number of refinement iterations (default 3).
-        aspect_ratio: Target aspect ratio (e.g., '16:9', '1:1'). Default: landscape.
+        aspect_ratio: Target aspect ratio. Supported:
+            1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, 21:9. Default: landscape.
 
     Returns:
         The generated diagram as a PNG image.

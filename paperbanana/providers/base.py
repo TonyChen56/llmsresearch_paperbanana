@@ -94,7 +94,7 @@ class ImageGenProvider(ABC):
             width: Output image width in pixels.
             height: Output image height in pixels.
             seed: Random seed for reproducibility.
-            aspect_ratio: Target aspect ratio (e.g., '16:9', '1:1'). When provided,
+            aspect_ratio: Target aspect ratio (1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, 21:9).
                 takes precedence over width/height for providers that support it.
 
         Returns:

@@ -107,10 +107,13 @@ class VisualizerAgent(BaseAgent):
     def _ratio_to_dimensions(ratio: str) -> tuple[int, int]:
         """Convert aspect ratio string to pixel dimensions."""
         mapping = {
+            "21:9": (2016, 864),
             "16:9": (1792, 1024),
+            "4:3": (1365, 1024),
             "3:2": (1536, 1024),
             "1:1": (1024, 1024),
             "2:3": (1024, 1536),
+            "3:4": (1024, 1365),
             "9:16": (1024, 1792),
         }
         return mapping.get(ratio, (1792, 1024))
