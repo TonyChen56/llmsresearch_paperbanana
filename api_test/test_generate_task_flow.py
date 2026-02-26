@@ -64,6 +64,7 @@ def _http_json(
     token: str,
     base_url: str,
     payload: dict[str, Any] | None = None,
+    max_retries: int = 3,
 ) -> dict[str, Any]:
     data = None
     headers = _build_headers(base_url=base_url, token=token)
@@ -71,37 +72,54 @@ def _http_json(
         data = json.dumps(payload).encode("utf-8")
         headers["Content-Type"] = "application/json"
 
-    req = Request(url=url, method=method.upper(), data=data, headers=headers)
-    try:
-        with urlopen(req, timeout=120) as resp:
-            body = resp.read().decode("utf-8")
-            return json.loads(body) if body else {}
-    except HTTPError as exc:
-        err = exc.read().decode("utf-8", errors="replace")
-        if exc.code == 403 and "1010" in err:
-            raise RuntimeError(
-                f"HTTP 403 {url}\n"
-                f"{err}\n\n"
-                "检测到 Cloudflare 1010 拦截（不是 token 错误）。\n"
-                "请在 Cloudflare/WAF 放行该域名的当前客户端访问，或改用未拦截的子域名。"
-            ) from exc
-        raise RuntimeError(f"HTTP {exc.code} {url}\n{err}") from exc
-    except URLError as exc:
-        raise RuntimeError(f"请求失败: {url}\n{exc}") from exc
+    for attempt in range(max_retries + 1):
+        req = Request(url=url, method=method.upper(), data=data, headers=headers)
+        try:
+            with urlopen(req, timeout=120) as resp:
+                body = resp.read().decode("utf-8")
+                return json.loads(body) if body else {}
+        except HTTPError as exc:
+            err = exc.read().decode("utf-8", errors="replace")
+            if exc.code == 403 and "1010" in err:
+                raise RuntimeError(
+                    f"HTTP 403 {url}\n"
+                    f"{err}\n\n"
+                    "检测到 Cloudflare 1010 拦截（不是 token 错误）。\n"
+                    "请在 Cloudflare/WAF 放行该域名的当前客户端访问，或改用未拦截的子域名。"
+                ) from exc
+            if exc.code in {429, 500, 502, 503, 504} and attempt < max_retries:
+                time.sleep(min(2 ** attempt, 8))
+                continue
+            raise RuntimeError(f"HTTP {exc.code} {url}\n{err}") from exc
+        except URLError as exc:
+            if attempt < max_retries:
+                time.sleep(min(2 ** attempt, 8))
+                continue
+            raise RuntimeError(f"请求失败: {url}\n{exc}") from exc
+
+    raise RuntimeError(f"请求失败: {url}")
 
 
-def _download_binary(url: str, token: str, base_url: str) -> tuple[bytes, str]:
-    req = Request(url=url, method="GET", headers=_build_headers(base_url=base_url, token=token))
-    try:
-        with urlopen(req, timeout=300) as resp:
-            content = resp.read()
-            content_type = resp.headers.get("Content-Type", "")
-            return content, content_type
-    except HTTPError as exc:
-        err = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"下载失败 HTTP {exc.code} {url}\n{err}") from exc
-    except URLError as exc:
-        raise RuntimeError(f"下载失败: {url}\n{exc}") from exc
+def _download_binary(url: str, token: str, base_url: str, max_retries: int = 3) -> tuple[bytes, str]:
+    for attempt in range(max_retries + 1):
+        req = Request(url=url, method="GET", headers=_build_headers(base_url=base_url, token=token))
+        try:
+            with urlopen(req, timeout=300) as resp:
+                content = resp.read()
+                content_type = resp.headers.get("Content-Type", "")
+                return content, content_type
+        except HTTPError as exc:
+            err = exc.read().decode("utf-8", errors="replace")
+            if exc.code in {429, 500, 502, 503, 504} and attempt < max_retries:
+                time.sleep(min(2 ** attempt, 8))
+                continue
+            raise RuntimeError(f"下载失败 HTTP {exc.code} {url}\n{err}") from exc
+        except URLError as exc:
+            if attempt < max_retries:
+                time.sleep(min(2 ** attempt, 8))
+                continue
+            raise RuntimeError(f"下载失败: {url}\n{exc}") from exc
+    raise RuntimeError(f"下载失败: {url}")
 
 
 def _guess_extension(content_type: str, artifact_url: str) -> str:
@@ -139,7 +157,14 @@ def run(args: argparse.Namespace) -> int:
     }
 
     print(f"[1/3] 提交任务: {submit_url}")
-    submit_resp = _http_json("POST", submit_url, token, base_url, payload)
+    submit_resp = _http_json(
+        "POST",
+        submit_url,
+        token,
+        base_url,
+        payload,
+        max_retries=args.network_retries,
+    )
     task_id = submit_resp.get("task_id")
     if not task_id:
         print(f"错误: 提交返回中缺少 task_id: {submit_resp}", file=sys.stderr)
@@ -152,7 +177,18 @@ def run(args: argparse.Namespace) -> int:
 
     print("[2/3] 轮询状态...")
     while time.time() < deadline:
-        status = _http_json("GET", status_url, token, base_url)
+        try:
+            status = _http_json(
+                "GET",
+                status_url,
+                token,
+                base_url,
+                max_retries=args.network_retries,
+            )
+        except RuntimeError as exc:
+            print(f"  轮询请求异常，继续重试: {exc}", file=sys.stderr)
+            time.sleep(args.poll_interval_seconds)
+            continue
         state = str(status.get("status", ""))
         progress = status.get("progress") or "-"
         print(f"  status={state:<10} progress={progress}")
@@ -174,7 +210,12 @@ def run(args: argparse.Namespace) -> int:
     artifact_full_url = urljoin(f"{base_url}/", artifact_url.lstrip("/"))
 
     print(f"[3/3] 下载产物: {artifact_full_url}")
-    content, content_type = _download_binary(artifact_full_url, token, base_url)
+    content, content_type = _download_binary(
+        artifact_full_url,
+        token,
+        base_url,
+        max_retries=args.network_retries,
+    )
 
     output_dir = Path(__file__).resolve().parent
     ext = _guess_extension(content_type, artifact_url)
@@ -205,6 +246,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--optimize-inputs", action="store_true", help="是否启用输入优化")
     parser.add_argument("--poll-interval-seconds", type=int, default=5, help="轮询间隔秒数")
     parser.add_argument("--timeout-seconds", type=int, default=600, help="轮询超时秒数")
+    parser.add_argument("--network-retries", type=int, default=3, help="单次请求的网络重试次数")
     return parser
 
 
