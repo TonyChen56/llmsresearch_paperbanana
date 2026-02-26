@@ -50,6 +50,7 @@ class VisualizerAgent(BaseAgent):
         output_path: Optional[str] = None,
         iteration: int = 0,
         seed: Optional[int] = None,
+        aspect_ratio: Optional[str] = None,
     ) -> str:
         """Generate an image from a description.
 
@@ -60,6 +61,7 @@ class VisualizerAgent(BaseAgent):
             output_path: Where to save the generated image.
             iteration: Current iteration number (for naming).
             seed: Random seed for reproducibility.
+            aspect_ratio: Target aspect ratio (e.g., '16:9', '1:1').
 
         Returns:
             Path to the generated image.
@@ -67,7 +69,7 @@ class VisualizerAgent(BaseAgent):
         if diagram_type == DiagramType.STATISTICAL_PLOT:
             return await self._generate_plot(description, raw_data, output_path, iteration)
         else:
-            return await self._generate_diagram(description, output_path, iteration, seed)
+            return await self._generate_diagram(description, output_path, iteration, seed, aspect_ratio)
 
     async def _generate_diagram(
         self,
@@ -75,6 +77,7 @@ class VisualizerAgent(BaseAgent):
         output_path: Optional[str],
         iteration: int,
         seed: Optional[int],
+        aspect_ratio: Optional[str] = None,
     ) -> str:
         """Generate a methodology diagram using the image generation model."""
         template = self.load_prompt("diagram")
@@ -82,11 +85,15 @@ class VisualizerAgent(BaseAgent):
 
         logger.info("Generating diagram image", iteration=iteration)
 
+        # Determine dimensions from aspect ratio or use defaults
+        w, h = self._ratio_to_dimensions(aspect_ratio) if aspect_ratio else (1792, 1024)
+
         image = await self.image_gen.generate(
             prompt=prompt,
-            width=1792,
-            height=1024,
+            width=w,
+            height=h,
             seed=seed,
+            aspect_ratio=aspect_ratio,
         )
 
         if output_path is None:
@@ -95,6 +102,18 @@ class VisualizerAgent(BaseAgent):
         save_image(image, output_path)
         logger.info("Diagram saved", path=output_path)
         return output_path
+
+    @staticmethod
+    def _ratio_to_dimensions(ratio: str) -> tuple[int, int]:
+        """Convert aspect ratio string to pixel dimensions."""
+        mapping = {
+            "16:9": (1792, 1024),
+            "3:2": (1536, 1024),
+            "1:1": (1024, 1024),
+            "2:3": (1024, 1536),
+            "9:16": (1024, 1792),
+        }
+        return mapping.get(ratio, (1792, 1024))
 
     async def _generate_plot(
         self,

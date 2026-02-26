@@ -69,6 +69,15 @@ class OpenAIImageGen(ImageGenProvider):
             return "1024x1536"
         return "1024x1024"
 
+    _RATIO_TO_SIZE = {
+        "16:9": "1536x1024",
+        "3:2": "1536x1024",
+        "1:1": "1024x1024",
+        "2:3": "1024x1536",
+        "9:16": "1024x1536",
+    }
+
+
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=2, max=30))
     async def generate(
         self,
@@ -77,6 +86,7 @@ class OpenAIImageGen(ImageGenProvider):
         width: int = 1024,
         height: int = 1024,
         seed: Optional[int] = None,
+        aspect_ratio: Optional[str] = None,
     ) -> Image.Image:
         client = self._get_client()
 
@@ -88,7 +98,7 @@ class OpenAIImageGen(ImageGenProvider):
             model=self._model,
             prompt=full_prompt,
             n=1,
-            size=self._size_string(width, height),
+            size=self._RATIO_TO_SIZE.get(aspect_ratio, self._size_string(width, height)),
         )
 
         b64_data = result.data[0].b64_json

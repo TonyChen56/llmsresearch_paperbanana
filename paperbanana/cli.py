@@ -61,6 +61,10 @@ def generate(
     feedback: Optional[str] = typer.Option(
         None, "--feedback", help="User feedback for the critic when continuing a run"
     ),
+    aspect_ratio: Optional[str] = typer.Option(
+        None, "--aspect-ratio", "-ar",
+        help="Target aspect ratio (e.g., '16:9', '3:2', '1:1', '2:3', '9:16')",
+    ),
     format: str = typer.Option(
         "png",
         "--format",
@@ -219,6 +223,7 @@ def generate(
         source_context=source_context,
         communicative_intent=caption,
         diagram_type=DiagramType.METHODOLOGY,
+        aspect_ratio=aspect_ratio,
     )
 
     # Determine expected output file extension based on settings.output_format

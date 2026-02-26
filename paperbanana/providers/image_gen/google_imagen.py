@@ -83,6 +83,7 @@ class GoogleImagenGen(ImageGenProvider):
         width: int = 1024,
         height: int = 1024,
         seed: Optional[int] = None,
+        aspect_ratio: Optional[str] = None,
     ) -> Image.Image:
         from google.genai import types
 
@@ -94,7 +95,7 @@ class GoogleImagenGen(ImageGenProvider):
         config = types.GenerateContentConfig(
             response_modalities=["IMAGE"],
             image_config=types.ImageConfig(
-                aspect_ratio=self._aspect_ratio(width, height),
+                aspect_ratio=aspect_ratio or self._aspect_ratio(width, height),
                 image_size=self._image_size(width, height),
             ),
         )

@@ -112,6 +112,7 @@ async def generate_diagram(
     source_context: str,
     caption: str,
     iterations: int = 3,
+    aspect_ratio: str | None = None,
 ) -> Image:
     """Generate a publication-quality methodology diagram from text.
 
@@ -119,6 +120,7 @@ async def generate_diagram(
         source_context: Methodology section text or relevant paper excerpt.
         caption: Figure caption describing what the diagram should communicate.
         iterations: Number of refinement iterations (default 3).
+        aspect_ratio: Target aspect ratio (e.g., '16:9', '1:1'). Default: landscape.
 
     Returns:
         The generated diagram as a PNG image.
@@ -130,6 +132,7 @@ async def generate_diagram(
         source_context=source_context,
         communicative_intent=caption,
         diagram_type=DiagramType.METHODOLOGY,
+        aspect_ratio=aspect_ratio,
     )
 
     result = await pipeline.generate(gen_input)

@@ -24,6 +24,11 @@ class GenerationInput(BaseModel):
     raw_data: Optional[dict[str, Any]] = Field(
         default=None, description="Raw data for statistical plots (CSV path or dict)"
     )
+    aspect_ratio: Optional[str] = Field(
+        default=None,
+        description="Target aspect ratio (e.g., '16:9', '3:2', '1:1', '2:3', '9:16'). "
+        "If None, uses provider default.",
+    )
 
 
 class ReferenceExample(BaseModel):
