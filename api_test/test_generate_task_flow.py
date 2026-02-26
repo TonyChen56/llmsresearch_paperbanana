@@ -40,9 +40,33 @@ def _load_token_from_env_file() -> str | None:
     return None
 
 
-def _http_json(method: str, url: str, token: str, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+def _build_headers(base_url: str, token: str, content_type: str | None = None) -> dict[str, str]:
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/json,text/plain,*/*",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+        "User-Agent": (
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0.0.0 Safari/537.36"
+        ),
+        "Origin": base_url,
+        "Referer": f"{base_url}/static/docs.html",
+    }
+    if content_type:
+        headers["Content-Type"] = content_type
+    return headers
+
+
+def _http_json(
+    method: str,
+    url: str,
+    token: str,
+    base_url: str,
+    payload: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     data = None
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = _build_headers(base_url=base_url, token=token)
     if payload is not None:
         data = json.dumps(payload).encode("utf-8")
         headers["Content-Type"] = "application/json"
@@ -54,13 +78,20 @@ def _http_json(method: str, url: str, token: str, payload: dict[str, Any] | None
             return json.loads(body) if body else {}
     except HTTPError as exc:
         err = exc.read().decode("utf-8", errors="replace")
+        if exc.code == 403 and "1010" in err:
+            raise RuntimeError(
+                f"HTTP 403 {url}\n"
+                f"{err}\n\n"
+                "检测到 Cloudflare 1010 拦截（不是 token 错误）。\n"
+                "请在 Cloudflare/WAF 放行该域名的当前客户端访问，或改用未拦截的子域名。"
+            ) from exc
         raise RuntimeError(f"HTTP {exc.code} {url}\n{err}") from exc
     except URLError as exc:
         raise RuntimeError(f"请求失败: {url}\n{exc}") from exc
 
 
-def _download_binary(url: str, token: str) -> tuple[bytes, str]:
-    req = Request(url=url, method="GET", headers={"Authorization": f"Bearer {token}"})
+def _download_binary(url: str, token: str, base_url: str) -> tuple[bytes, str]:
+    req = Request(url=url, method="GET", headers=_build_headers(base_url=base_url, token=token))
     try:
         with urlopen(req, timeout=300) as resp:
             content = resp.read()
@@ -108,7 +139,7 @@ def run(args: argparse.Namespace) -> int:
     }
 
     print(f"[1/3] 提交任务: {submit_url}")
-    submit_resp = _http_json("POST", submit_url, token, payload)
+    submit_resp = _http_json("POST", submit_url, token, base_url, payload)
     task_id = submit_resp.get("task_id")
     if not task_id:
         print(f"错误: 提交返回中缺少 task_id: {submit_resp}", file=sys.stderr)
@@ -121,7 +152,7 @@ def run(args: argparse.Namespace) -> int:
 
     print("[2/3] 轮询状态...")
     while time.time() < deadline:
-        status = _http_json("GET", status_url, token)
+        status = _http_json("GET", status_url, token, base_url)
         state = str(status.get("status", ""))
         progress = status.get("progress") or "-"
         print(f"  status={state:<10} progress={progress}")
@@ -143,7 +174,7 @@ def run(args: argparse.Namespace) -> int:
     artifact_full_url = urljoin(f"{base_url}/", artifact_url.lstrip("/"))
 
     print(f"[3/3] 下载产物: {artifact_full_url}")
-    content, content_type = _download_binary(artifact_full_url, token)
+    content, content_type = _download_binary(artifact_full_url, token, base_url)
 
     output_dir = Path(__file__).resolve().parent
     ext = _guess_extension(content_type, artifact_url)
