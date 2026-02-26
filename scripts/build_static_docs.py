@@ -12,12 +12,74 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from api.app import app
 
+_ENDPOINT_META: dict[tuple[str, str], dict[str, str]] = {
+    ("get", "/health"): {
+        "nav_label": "健康检查",
+        "title": "健康检查",
+        "description": "检查 API 服务是否正常运行。",
+    },
+    ("post", "/api/v1/tasks/generate"): {
+        "nav_label": "提交生成任务",
+        "title": "提交生成任务",
+        "description": "提交方法图生成任务，返回 task_id 后异步执行。",
+    },
+    ("post", "/api/v1/tasks/plot"): {
+        "nav_label": "提交统计图任务",
+        "title": "提交统计图任务",
+        "description": "提交统计图生成任务，支持自定义 JSON 数据。",
+    },
+    ("post", "/api/v1/tasks/continue"): {
+        "nav_label": "提交续跑任务",
+        "title": "提交续跑任务",
+        "description": "继续已有 run 的迭代优化，支持用户反馈。",
+    },
+    ("post", "/api/v1/tasks/evaluate"): {
+        "nav_label": "提交评测任务",
+        "title": "提交评测任务",
+        "description": "上传生成图与参考图，异步返回结构化评测结果。",
+    },
+    ("get", "/api/v1/tasks/{task_id}"): {
+        "nav_label": "查询任务状态",
+        "title": "查询任务状态",
+        "description": "轮询任务状态，直到状态变为完成或失败。",
+    },
+    ("get", "/api/v1/tasks/{task_id}/artifact"): {
+        "nav_label": "下载任务结果",
+        "title": "下载任务结果",
+        "description": "下载任务最终产物（图片或 JSON）。",
+    },
+}
+
+_ENDPOINT_ORDER: dict[tuple[str, str], int] = {
+    ("get", "/health"): 10,
+    ("post", "/api/v1/tasks/generate"): 20,
+    ("post", "/api/v1/tasks/plot"): 30,
+    ("post", "/api/v1/tasks/continue"): 40,
+    ("post", "/api/v1/tasks/evaluate"): 50,
+    ("get", "/api/v1/tasks/{task_id}"): 60,
+    ("get", "/api/v1/tasks/{task_id}/artifact"): 70,
+}
+
+_RESPONSE_DESC_MAP = {
+    "Successful Response": "请求成功",
+    "Validation Error": "参数校验错误",
+}
+
+_TAG_MAP = {
+    "Tasks": "任务接口",
+    "Health": "健康检查",
+}
+
 
 def _plain_text(value: str | None) -> str:
     if not value:
         return ""
     text = re.sub(r"\s+", " ", value).strip()
     return text
+
+
+def _localized_response_description(value: str) -> str:
+    return _RESPONSE_DESC_MAP.get(value, value)
 
 
 def _extract_request_example(operation: dict[str, Any]) -> str | None:
@@ -88,27 +150,38 @@ def _collect_endpoints(openapi_schema: dict[str, Any]) -> list[dict[str, Any]]:
             method_lower = method.lower()
             if method_lower not in {"get", "post", "put", "patch", "delete"}:
                 continue
+            endpoint_key = (method_lower, path)
+            localized = _ENDPOINT_META.get(endpoint_key, {})
             anchor = (
                 f"{method_lower}-"
                 f"{path.strip('/').replace('/', '-').replace('{', '').replace('}', '')}"
             )
             request_example = _extract_request_example(operation)
-            responses = [
-                {
-                    "code": code,
-                    "description": _plain_text(resp.get("description")) or "-",
-                }
-                for code, resp in operation.get("responses", {}).items()
-            ]
+            responses = []
+            for code, resp in operation.get("responses", {}).items():
+                desc = _plain_text(resp.get("description")) or "-"
+                responses.append(
+                    {
+                        "code": code,
+                        "description": _localized_response_description(desc),
+                    }
+                )
+
+            summary = _plain_text(operation.get("summary"))
+            description = _plain_text(operation.get("description"))
+            title = localized.get("title") or summary or f"{method_lower.upper()} {path}"
+            nav_label = localized.get("nav_label") or title
+            description = localized.get("description") or description
             endpoints.append(
                 {
                     "anchor": anchor,
                     "path": path,
                     "method_upper": method_lower.upper(),
                     "method_class": method_lower,
-                    "summary": _plain_text(operation.get("summary")),
-                    "description": _plain_text(operation.get("description")),
-                    "tags": operation.get("tags", []),
+                    "title": title,
+                    "nav_label": nav_label,
+                    "description": description,
+                    "tags": [_TAG_MAP.get(tag, tag) for tag in operation.get("tags", [])],
                     "request_content_types": list(
                         operation.get("requestBody", {}).get("content", {}).keys()
                     ),
@@ -120,9 +193,11 @@ def _collect_endpoints(openapi_schema: dict[str, Any]) -> list[dict[str, Any]]:
                         operation,
                         request_example,
                     ),
+                    "requires_auth": path.startswith("/api/v1/"),
+                    "order": _ENDPOINT_ORDER.get(endpoint_key, 999),
                 }
             )
-    endpoints.sort(key=lambda x: (x["path"], x["method_upper"]))
+    endpoints.sort(key=lambda x: (x["order"], x["path"], x["method_upper"]))
     return endpoints
 
 

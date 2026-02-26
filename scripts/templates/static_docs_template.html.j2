@@ -301,6 +301,29 @@
       margin-top: 10px;
     }
 
+    .auth-pill {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid #dbeafe;
+      background: #eff6ff;
+      color: #1e3a8a;
+      font-size: 0.72rem;
+      font-weight: 600;
+      vertical-align: middle;
+    }
+
+    .endpoint-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .endpoint-path {
+      margin-bottom: 8px;
+    }
+
     @media (max-width: 960px) {
       .layout {
         flex-direction: column;
@@ -328,9 +351,9 @@
   <div class="layout">
     <aside class="sidebar">
       <div class="brand">
-        <h1>{{ title }}</h1>
+        <h1>🍌 PaperBanana</h1>
         <p>版本 {{ version }}</p>
-        <p>自动生成静态文档</p>
+        <p>学术图表生成 API 文档</p>
       </div>
       <div class="nav-wrap">
         <div class="nav-group">
@@ -343,7 +366,7 @@
           {% for ep in endpoints %}
           <a class="nav-item" href="#{{ ep.anchor }}">
             <span class="method {{ ep.method_class }}">{{ ep.method_upper }}</span>
-            <span>{{ ep.path }}</span>
+            <span>{{ ep.nav_label }}</span>
           </a>
           {% endfor %}
         </div>
@@ -355,7 +378,7 @@
         <p>{{ summary }}</p>
         <div class="overview-grid">
           <div class="metric">
-            <div class="k">Base URL</div>
+            <div class="k">服务地址</div>
             <div class="v"><code>https://api.paperbanana.me</code></div>
           </div>
           <div class="metric">
@@ -380,9 +403,12 @@
       <section id="{{ ep.anchor }}" class="card">
         <div class="endpoint-head">
           <span class="method {{ ep.method_class }}">{{ ep.method_upper }}</span>
-          <span class="path">{{ ep.path }}</span>
+          <span class="endpoint-title">{{ ep.title }}</span>
+          {% if ep.requires_auth %}
+          <span class="auth-pill">需鉴权</span>
+          {% endif %}
         </div>
-        {% if ep.summary %}<p><strong>{{ ep.summary }}</strong></p>{% endif %}
+        <p class="endpoint-path"><span class="path">{{ ep.path }}</span></p>
         {% if ep.description %}<p class="meta">{{ ep.description }}</p>{% endif %}
         {% if ep.tags and ep.tags|length > 0 %}
         <div>
@@ -393,7 +419,7 @@
         {% endif %}
 
         {% if ep.request_content_types and ep.request_content_types|length > 0 %}
-        <span class="label">请求 Content-Type</span>
+        <span class="label">请求类型（Content-Type）</span>
         <p><code>{{ ep.request_content_types|join(", ") }}</code></p>
         {% endif %}
 
@@ -416,7 +442,7 @@
         </table>
         {% endif %}
 
-        <span class="label">cURL</span>
+        <span class="label">请求命令（cURL）</span>
         <pre><code>{{ ep.curl_example }}</code></pre>
       </section>
       {% endfor %}
