@@ -1,53 +1,55 @@
-# Copilot Instructions for PaperBanana
+# PaperBanana Copilot 指引
 
-## Build & Test
+## 构建与测试
 
 ```bash
-# Install for development
+# 开发环境安装
 pip install -e ".[dev,openai,google]"
 
-# Run full test suite
+# 运行完整测试
 pytest tests/ -v
 
-# Run a single test file
+# 运行单个测试文件
 pytest tests/test_pipeline/test_types.py -v
 
-# Run a single test by name
+# 按名称运行单个测试
 pytest tests/ -k "test_critique_result_needs_revision" -v
 
-# Lint
+# 代码检查
 ruff check paperbanana/ mcp_server/ tests/ scripts/
 
-# Format
+# 代码格式化
 ruff format paperbanana/ mcp_server/ tests/ scripts/
 ```
 
-CI runs lint, tests (Python 3.10–3.12 on Linux/macOS/Windows), and package build. Tests must pass without a `GOOGLE_API_KEY`—all tests mock external providers.
+CI 在 Linux/macOS/Windows 上运行 Python 3.10–3.12 的 lint、测试和包构建。所有测试必须在没有 `GOOGLE_API_KEY` 的情况下通过——测试中 mock 所有外部 provider。
 
-## Architecture
+## 架构
 
-PaperBanana is an agentic framework that generates publication-quality academic diagrams from text. It implements a **two-phase multi-agent pipeline**:
+PaperBanana 是一个从文本生成出版级学术图表的多智能体框架，采用**两阶段多 Agent 流水线**：
 
-**Phase 1 — Linear Planning:** Retriever → Planner → Stylist  
-**Phase 2 — Iterative Refinement:** Visualizer ↔ Critic (up to N rounds)
+**Phase 0 — 输入优化（可选）：** InputOptimizer 并行运行两个 VLM 调用（上下文增强 + 标题锐化）
+**Phase 1 — 线性规划：** Retriever → Planner → Stylist  
+**Phase 2 — 迭代精炼：** Visualizer ↔ Critic（最多 N 轮）
 
-Key architectural layers:
+核心架构分层：
 
-- **`paperbanana/core/`** — Pipeline orchestrator (`pipeline.py`), Pydantic data types (`types.py`), config via `pydantic-settings` (`config.py`). `Settings` loads from env vars, `.env` file, or YAML config.
-- **`paperbanana/agents/`** — Seven agents (Optimizer, Retriever, Planner, Stylist, Visualizer, Critic, plus InputOptimizer with parallel sub-tasks), all inheriting from `BaseAgent`. Each agent wraps a VLM provider and a prompt template loaded from `prompts/`.
-- **`paperbanana/providers/`** — Abstract `VLMProvider` and `ImageGenProvider` base classes in `base.py`. Concrete implementations in `vlm/` (OpenAI, Gemini, OpenRouter) and `image_gen/` (OpenAI, Google Imagen, OpenRouter). `ProviderRegistry` is the factory that creates providers from `Settings`.
-- **`prompts/`** — Text prompt templates organized by type (`diagram/`, `plot/`, `evaluation/`). Templates use `{placeholder}` formatting, loaded by `BaseAgent.load_prompt()`.
-- **`paperbanana/evaluation/`** — VLM-as-Judge system. Scores on 4 dimensions (Faithfulness, Readability, Conciseness, Aesthetics) with hierarchical aggregation.
-- **`mcp_server/`** — FastMCP server exposing three tools: `generate_diagram`, `generate_plot`, `evaluate_diagram`.
-- **`data/reference_sets/`** — 13 curated methodology diagram examples used for in-context learning by the Retriever agent.
+- **`paperbanana/core/`** — 流水线编排器（`pipeline.py`）、Pydantic 数据类型（`types.py`）、基于 pydantic-settings 的配置（`config.py`）、运行恢复（`resume.py`）。`Settings` 从环境变量、`.env` 文件或 YAML 配置加载。
+- **`paperbanana/agents/`** — 所有 Agent 继承自 `BaseAgent`（`base.py`），封装 `VLMProvider` 并通过 `load_prompt()` 从 `prompts/` 加载提示词模板。Agent 包括：Retriever、Planner、Stylist、Visualizer、Critic、InputOptimizer。
+- **`paperbanana/providers/`** — `base.py` 中定义抽象基类 `VLMProvider` 和 `ImageGenProvider`。具体实现在 `vlm/`（OpenAI、Gemini、OpenRouter）和 `image_gen/`（OpenAI、Google Imagen、OpenRouter）。`ProviderRegistry`（`registry.py`）是工厂类。
+- **`prompts/`** — 文本提示词模板，按类型分目录（`diagram/`、`plot/`、`evaluation/`），使用 `{placeholder}` 格式化。禁止在 Python 代码中内联提示词。
+- **`paperbanana/evaluation/`** — VLM-as-Judge 评分系统，4 个维度：忠实度、可读性、简洁性、美观度。
+- **`mcp_server/`** — FastMCP 服务器，暴露三个工具：`generate_diagram`、`generate_plot`、`evaluate_diagram`。
+- **`data/reference_sets/`** — 13 个精选方法论图表示例，供 Retriever Agent 进行上下文学习。
 
-## Conventions
+## 编码约定
 
-- **Async everywhere**: The pipeline and all agents use `async/await`. Tests use `pytest-asyncio` with `asyncio_mode = "auto"`.
-- **Pydantic models for all data types**: Inputs, outputs, configs, and intermediate results are Pydantic `BaseModel` subclasses. Use `model_dump()` for serialization.
-- **Provider pattern**: To add a new provider, implement `VLMProvider` or `ImageGenProvider` from `providers/base.py`, then register it in `ProviderRegistry`.
-- **Prompt templates live in `prompts/`, not in code**: Agent prompts are `.txt` files with `{placeholder}` substitution. Don't inline prompts in Python.
-- **Config hierarchy**: `Settings` merges env vars → `.env` file → YAML config → CLI overrides. API keys come from environment only (`OPENAI_API_KEY`, `GOOGLE_API_KEY`, `OPENROUTER_API_KEY`).
-- **Ruff for all linting/formatting**: Line length 100, target Python 3.10. Select rules: E, F, I, N, W.
-- **structlog for logging**: Use `structlog.get_logger()` with keyword arguments, not f-strings in log calls.
-- **Entry points**: CLI via Typer (`paperbanana.cli:app`), MCP server via FastMCP (`mcp_server.server:main`).
+- **全异步**：流水线和所有 Agent 使用 `async/await`。测试使用 `pytest-asyncio`，配置 `asyncio_mode = "auto"`。
+- **Pydantic 模型承载所有数据类型**：输入、输出、配置和中间结果均为 `BaseModel` 子类，序列化使用 `model_dump()`。
+- **Provider 模式**：新增 provider 需实现 `providers/base.py` 中的 `VLMProvider` 或 `ImageGenProvider`，然后在 `ProviderRegistry` 中注册。
+- **提示词模板在 `prompts/` 中，不在代码里**：Agent 提示词是 `.txt` 文件，使用 `{placeholder}` 替换。
+- **配置优先级**：`Settings` 合并顺序为 环境变量 → `.env` 文件 → YAML 配置 → CLI 参数。API Key 仅从环境变量读取（`OPENAI_API_KEY`、`GOOGLE_API_KEY`、`OPENROUTER_API_KEY`）。
+- **Ruff 统一 lint/格式化**：行宽 100，目标 Python 3.10，规则集：E, F, I, N, W。
+- **structlog 日志**：使用 `structlog.get_logger()` 配合关键字参数，不要在日志调用中使用 f-string。
+- **入口点**：CLI 通过 Typer（`paperbanana.cli:app`），MCP 服务器通过 FastMCP（`mcp_server.server:main`）。
+- **测试 mock 所有外部 provider**：测试中禁止真实 API 调用，使用 `unittest.mock` / pytest fixtures mock provider 响应。
