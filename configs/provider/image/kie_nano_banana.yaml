@@ -1,0 +1,9 @@
+# KIE Nano Banana Image Provider
+# Get API key: https://kie.ai/api-key
+type: kie_nano_banana
+priority: 2
+capabilities:
+  - text_to_image
+config:
+  model: google/nano-banana
+  api_key: ${KIE_API_KEY}

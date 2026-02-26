@@ -85,12 +85,15 @@ class Settings(BaseSettings):
     openai_base_url: str = Field(default="https://api.openai.com/v1", alias="OPENAI_BASE_URL")
     openai_vlm_model: Optional[str] = Field(default=None, alias="OPENAI_VLM_MODEL")
     openai_image_model: Optional[str] = Field(default=None, alias="OPENAI_IMAGE_MODEL")
+    kie_api_key: Optional[str] = Field(default=None, alias="KIE_API_KEY")
 
     @property
     def effective_vlm_model(self) -> str:
         """Return the VLM model for the active provider."""
         if self.vlm_provider == "openai" and self.openai_vlm_model:
             return self.openai_vlm_model
+        if self.vlm_provider == "kie":
+            return "gemini-2.5-flash"
         return self.vlm_model
 
     @property
@@ -98,6 +101,8 @@ class Settings(BaseSettings):
         """Return the image model for the active provider."""
         if self.image_provider == "openai_imagen" and self.openai_image_model:
             return self.openai_image_model
+        if self.image_provider in {"kie", "kie_nano_banana"}:
+            return "google/nano-banana"
         return self.image_model
 
     # SSL

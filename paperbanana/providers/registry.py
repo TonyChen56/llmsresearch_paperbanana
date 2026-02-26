@@ -33,6 +33,13 @@ _API_KEY_HINTS = {
         "  2. Set the environment variable:\n\n"
         "  export OPENAI_API_KEY=your-key-here"
     ),
+    "KIE_API_KEY": (
+        "KIE_API_KEY not found.\n\n"
+        "To fix this:\n"
+        "  1. Get an API key at: https://kie.ai/api-key\n"
+        "  2. Set the environment variable:\n\n"
+        "  export KIE_API_KEY=your-key-here"
+    ),
 }
 
 
@@ -77,9 +84,17 @@ class ProviderRegistry:
                 model=settings.openai_vlm_model or settings.vlm_model,
                 base_url=settings.openai_base_url,
             )
+        elif provider == "kie":
+            _validate_api_key(settings.kie_api_key, "KIE_API_KEY")
+            from paperbanana.providers.vlm.kie import KieVLM
+
+            return KieVLM(
+                api_key=settings.kie_api_key,
+                model="gemini-2.5-flash",
+            )
         else:
             raise ValueError(
-                f"Unknown VLM provider: {provider}. Available: gemini, openrouter, openai"
+                f"Unknown VLM provider: {provider}. Available: gemini, openrouter, openai, kie"
             )
 
     @staticmethod
@@ -115,8 +130,18 @@ class ProviderRegistry:
                 model=settings.openai_image_model or settings.image_model,
                 base_url=settings.openai_base_url,
             )
+        elif provider in ("kie_nano_banana", "kie"):
+            _validate_api_key(settings.kie_api_key, "KIE_API_KEY")
+            from paperbanana.providers.image_gen.kie_nano_banana import (
+                KieNanoBananaImageGen,
+            )
+
+            return KieNanoBananaImageGen(
+                api_key=settings.kie_api_key,
+                model="google/nano-banana",
+            )
         else:
             raise ValueError(
                 f"Unknown image provider: {provider}. "
-                f"Available: google_imagen, openrouter_imagen, openai_imagen"
+                f"Available: google_imagen, openrouter_imagen, openai_imagen, kie_nano_banana"
             )
