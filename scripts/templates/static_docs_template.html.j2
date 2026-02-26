@@ -5,33 +5,323 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ title }} 文档</title>
   <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; background: #f7f8fa; color: #1f2937; }
-    .layout { display: flex; min-height: 100vh; }
-    .sidebar { width: 300px; background: #fff; border-right: 1px solid #e5e7eb; padding: 24px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
-    .brand { padding: 0 24px 16px; border-bottom: 1px solid #e5e7eb; margin-bottom: 12px; }
-    .brand h1 { margin: 0; font-size: 20px; color: #2563eb; }
-    .brand p { margin: 6px 0 0; color: #6b7280; font-size: 13px; }
-    .nav { padding: 8px 16px; }
-    .nav a { display: block; padding: 8px 10px; margin-bottom: 4px; border-radius: 8px; color: #374151; text-decoration: none; font-size: 14px; }
-    .nav a:hover { background: #eff6ff; color: #1d4ed8; }
-    .main { flex: 1; padding: 24px; max-width: 1200px; }
-    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-    .card h2 { margin: 0 0 10px; }
-    .muted { color: #6b7280; font-size: 13px; }
-    .endpoint-title { margin: 0 0 10px; font-size: 18px; }
-    .badge { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 10px; margin-right: 8px; }
-    .get { background: #dcfce7; color: #166534; }
-    .post { background: #dbeafe; color: #1e3a8a; }
-    .put { background: #fef3c7; color: #92400e; }
-    .patch { background: #f3e8ff; color: #6b21a8; }
-    .delete { background: #fee2e2; color: #991b1b; }
-    .path { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #f3f4f6; border-radius: 6px; padding: 2px 8px; }
-    pre { background: #111827; color: #e5e7eb; border-radius: 10px; padding: 12px; overflow-x: auto; font-size: 13px; }
-    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
-    th { background: #f9fafb; }
+    :root {
+      --bg: #f4f6fb;
+      --panel: #ffffff;
+      --line: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --primary-soft: #eff6ff;
+      --code-bg: #0f172a;
+      --shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC",
+        "Hiragino Sans GB", Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 85% -20%, #dbeafe 0%, transparent 45%), var(--bg);
+      line-height: 1.55;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 292px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+    }
+
+    .brand {
+      padding: 26px 22px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand h1 {
+      font-size: 1.32rem;
+      font-weight: 760;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .brand p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .nav-wrap {
+      padding: 14px 14px 22px;
+    }
+
+    .nav-group {
+      margin-bottom: 14px;
+    }
+
+    .nav-group h3 {
+      font-size: 0.73rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 9px 8px 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: #334155;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.86rem;
+      margin-bottom: 2px;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .nav-item:hover {
+      background: #f8fafc;
+      color: var(--primary);
+    }
+
+    .nav-item.active {
+      background: var(--primary-soft);
+      color: #1d4ed8;
+      font-weight: 600;
+    }
+
+    .main {
+      flex: 1;
+      max-width: 1220px;
+      padding: 28px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 18px;
+      scroll-margin-top: 20px;
+    }
+
+    .card h2 {
+      font-size: 1.75rem;
+      margin-bottom: 8px;
+    }
+
+    .card h3 {
+      font-size: 1.03rem;
+      margin-bottom: 12px;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .metric .k {
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .metric .v {
+      font-size: 0.94rem;
+      font-weight: 650;
+      color: #1e293b;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.84rem;
+      margin-top: 6px;
+    }
+
+    .note {
+      margin-top: 14px;
+      border-left: 4px solid var(--primary);
+      background: #eff6ff;
+      color: #1e3a8a;
+      border-radius: 7px;
+      padding: 10px 12px;
+      font-size: 0.88rem;
+    }
+
+    .method {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      line-height: 1;
+      min-width: 56px;
+      padding: 6px 10px;
+    }
+
+    .get {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .post {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .put {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .patch {
+      background: #f3e8ff;
+      color: #6b21a8;
+    }
+
+    .delete {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .endpoint-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .path {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 4px 9px;
+      font-size: 0.88rem;
+      color: #0f172a;
+    }
+
+    .tag {
+      display: inline-block;
+      border-radius: 999px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      color: #475569;
+      padding: 3px 8px;
+      font-size: 0.74rem;
+      margin-right: 5px;
+      margin-top: 4px;
+    }
+
+    .label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 650;
+      color: #334155;
+      margin: 12px 0 6px;
+    }
+
+    pre {
+      background: var(--code-bg);
+      color: #e2e8f0;
+      border-radius: 10px;
+      padding: 13px;
+      overflow-x: auto;
+      font-size: 0.8rem;
+      line-height: 1.5;
+      border: 1px solid #1e293b;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: 0.86rem;
+    }
+
+    th,
+    td {
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      padding: 10px 11px;
+    }
+
+    th {
+      background: #f8fafc;
+      font-weight: 650;
+      color: #334155;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .auth-box {
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1e3a8a;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 0.9rem;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 960px) {
+      .layout {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .main {
+        padding: 14px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -40,45 +330,80 @@
       <div class="brand">
         <h1>{{ title }}</h1>
         <p>版本 {{ version }}</p>
-        <p>静态文档自动生成</p>
+        <p>自动生成静态文档</p>
       </div>
-      <nav class="nav">
-        <a href="#overview">概览</a>
-        {% for ep in endpoints %}
-        <a href="#{{ ep.anchor }}">{{ ep.method_upper }} {{ ep.path }}</a>
-        {% endfor %}
-      </nav>
+      <div class="nav-wrap">
+        <div class="nav-group">
+          <h3>快速开始</h3>
+          <a class="nav-item active" href="#overview">概览</a>
+          <a class="nav-item" href="#authentication">鉴权</a>
+        </div>
+        <div class="nav-group">
+          <h3>API 端点</h3>
+          {% for ep in endpoints %}
+          <a class="nav-item" href="#{{ ep.anchor }}">
+            <span class="method {{ ep.method_class }}">{{ ep.method_upper }}</span>
+            <span>{{ ep.path }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
     </aside>
     <main class="main">
       <section id="overview" class="card">
         <h2>API 概览</h2>
-        <p class="muted">生成时间：{{ generated_at }}</p>
         <p>{{ summary }}</p>
+        <div class="overview-grid">
+          <div class="metric">
+            <div class="k">Base URL</div>
+            <div class="v"><code>https://api.paperbanana.me</code></div>
+          </div>
+          <div class="metric">
+            <div class="k">端点数量</div>
+            <div class="v">{{ endpoints|length }}</div>
+          </div>
+          <div class="metric">
+            <div class="k">生成时间</div>
+            <div class="v">{{ generated_at }}</div>
+          </div>
+        </div>
+        <p class="note">调用流程：提交任务 -> 轮询状态 -> 下载结果。任务均为异步执行。</p>
+      </section>
+
+      <section id="authentication" class="card">
+        <h3>鉴权</h3>
+        <p>除健康检查与文档接口外，业务接口都需要 Bearer Token。</p>
+        <div class="auth-box"><code>Authorization: Bearer &lt;PAPERBANANA_API_TOKEN&gt;</code></div>
       </section>
 
       {% for ep in endpoints %}
       <section id="{{ ep.anchor }}" class="card">
-        <h3 class="endpoint-title">
-          <span class="badge {{ ep.method_class }}">{{ ep.method_upper }}</span>
+        <div class="endpoint-head">
+          <span class="method {{ ep.method_class }}">{{ ep.method_upper }}</span>
           <span class="path">{{ ep.path }}</span>
-        </h3>
+        </div>
         {% if ep.summary %}<p><strong>{{ ep.summary }}</strong></p>{% endif %}
-        {% if ep.description %}<p>{{ ep.description }}</p>{% endif %}
+        {% if ep.description %}<p class="meta">{{ ep.description }}</p>{% endif %}
         {% if ep.tags and ep.tags|length > 0 %}
-        <p class="muted">标签：{{ ep.tags|join(", ") }}</p>
+        <div>
+          {% for tag in ep.tags %}
+          <span class="tag">{{ tag }}</span>
+          {% endfor %}
+        </div>
         {% endif %}
 
         {% if ep.request_content_types and ep.request_content_types|length > 0 %}
-        <p><strong>请求 Content-Type：</strong>{{ ep.request_content_types|join(", ") }}</p>
+        <span class="label">请求 Content-Type</span>
+        <p><code>{{ ep.request_content_types|join(", ") }}</code></p>
         {% endif %}
 
         {% if ep.request_example %}
-        <p><strong>请求示例：</strong></p>
+        <span class="label">请求示例</span>
         <pre><code>{{ ep.request_example }}</code></pre>
         {% endif %}
 
         {% if ep.responses and ep.responses|length > 0 %}
-        <p><strong>响应：</strong></p>
+        <span class="label">响应</span>
         <table>
           <thead>
             <tr><th>状态码</th><th>说明</th></tr>
@@ -91,11 +416,55 @@
         </table>
         {% endif %}
 
-        <p><strong>cURL：</strong></p>
+        <span class="label">cURL</span>
         <pre><code>{{ ep.curl_example }}</code></pre>
       </section>
       {% endfor %}
     </main>
   </div>
+  <script>
+    const links = Array.from(document.querySelectorAll(".nav-item[href^='#']"));
+    const map = new Map(
+      links
+        .map((link) => {
+          const target = document.querySelector(link.getAttribute("href"));
+          return target ? [target, link] : null;
+        })
+        .filter(Boolean),
+    );
+
+    const activate = (link) => {
+      links.forEach((node) => node.classList.remove("active"));
+      if (link) {
+        link.classList.add("active");
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) {
+          activate(map.get(visible.target));
+        }
+      },
+      { rootMargin: "-25% 0px -65% 0px", threshold: [0.12, 0.3, 0.55] },
+    );
+
+    map.forEach((_, section) => observer.observe(section));
+
+    links.forEach((link) => {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        const target = document.querySelector(link.getAttribute("href"));
+        if (!target) {
+          return;
+        }
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+        activate(link);
+      });
+    });
+  </script>
 </body>
 </html>

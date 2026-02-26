@@ -5,33 +5,323 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PaperBanana API 文档</title>
   <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; background: #f7f8fa; color: #1f2937; }
-    .layout { display: flex; min-height: 100vh; }
-    .sidebar { width: 300px; background: #fff; border-right: 1px solid #e5e7eb; padding: 24px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
-    .brand { padding: 0 24px 16px; border-bottom: 1px solid #e5e7eb; margin-bottom: 12px; }
-    .brand h1 { margin: 0; font-size: 20px; color: #2563eb; }
-    .brand p { margin: 6px 0 0; color: #6b7280; font-size: 13px; }
-    .nav { padding: 8px 16px; }
-    .nav a { display: block; padding: 8px 10px; margin-bottom: 4px; border-radius: 8px; color: #374151; text-decoration: none; font-size: 14px; }
-    .nav a:hover { background: #eff6ff; color: #1d4ed8; }
-    .main { flex: 1; padding: 24px; max-width: 1200px; }
-    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-    .card h2 { margin: 0 0 10px; }
-    .muted { color: #6b7280; font-size: 13px; }
-    .endpoint-title { margin: 0 0 10px; font-size: 18px; }
-    .badge { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 10px; margin-right: 8px; }
-    .get { background: #dcfce7; color: #166534; }
-    .post { background: #dbeafe; color: #1e3a8a; }
-    .put { background: #fef3c7; color: #92400e; }
-    .patch { background: #f3e8ff; color: #6b21a8; }
-    .delete { background: #fee2e2; color: #991b1b; }
-    .path { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #f3f4f6; border-radius: 6px; padding: 2px 8px; }
-    pre { background: #111827; color: #e5e7eb; border-radius: 10px; padding: 12px; overflow-x: auto; font-size: 13px; }
-    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
-    th { background: #f9fafb; }
+    :root {
+      --bg: #f4f6fb;
+      --panel: #ffffff;
+      --line: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --primary-soft: #eff6ff;
+      --code-bg: #0f172a;
+      --shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC",
+        "Hiragino Sans GB", Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 85% -20%, #dbeafe 0%, transparent 45%), var(--bg);
+      line-height: 1.55;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 292px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+    }
+
+    .brand {
+      padding: 26px 22px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand h1 {
+      font-size: 1.32rem;
+      font-weight: 760;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .brand p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .nav-wrap {
+      padding: 14px 14px 22px;
+    }
+
+    .nav-group {
+      margin-bottom: 14px;
+    }
+
+    .nav-group h3 {
+      font-size: 0.73rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 9px 8px 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: #334155;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.86rem;
+      margin-bottom: 2px;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .nav-item:hover {
+      background: #f8fafc;
+      color: var(--primary);
+    }
+
+    .nav-item.active {
+      background: var(--primary-soft);
+      color: #1d4ed8;
+      font-weight: 600;
+    }
+
+    .main {
+      flex: 1;
+      max-width: 1220px;
+      padding: 28px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 18px;
+      scroll-margin-top: 20px;
+    }
+
+    .card h2 {
+      font-size: 1.75rem;
+      margin-bottom: 8px;
+    }
+
+    .card h3 {
+      font-size: 1.03rem;
+      margin-bottom: 12px;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .metric .k {
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .metric .v {
+      font-size: 0.94rem;
+      font-weight: 650;
+      color: #1e293b;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.84rem;
+      margin-top: 6px;
+    }
+
+    .note {
+      margin-top: 14px;
+      border-left: 4px solid var(--primary);
+      background: #eff6ff;
+      color: #1e3a8a;
+      border-radius: 7px;
+      padding: 10px 12px;
+      font-size: 0.88rem;
+    }
+
+    .method {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      line-height: 1;
+      min-width: 56px;
+      padding: 6px 10px;
+    }
+
+    .get {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .post {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .put {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .patch {
+      background: #f3e8ff;
+      color: #6b21a8;
+    }
+
+    .delete {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .endpoint-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .path {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 4px 9px;
+      font-size: 0.88rem;
+      color: #0f172a;
+    }
+
+    .tag {
+      display: inline-block;
+      border-radius: 999px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      color: #475569;
+      padding: 3px 8px;
+      font-size: 0.74rem;
+      margin-right: 5px;
+      margin-top: 4px;
+    }
+
+    .label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 650;
+      color: #334155;
+      margin: 12px 0 6px;
+    }
+
+    pre {
+      background: var(--code-bg);
+      color: #e2e8f0;
+      border-radius: 10px;
+      padding: 13px;
+      overflow-x: auto;
+      font-size: 0.8rem;
+      line-height: 1.5;
+      border: 1px solid #1e293b;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: 0.86rem;
+    }
+
+    th,
+    td {
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      padding: 10px 11px;
+    }
+
+    th {
+      background: #f8fafc;
+      font-weight: 650;
+      color: #334155;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .auth-box {
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1e3a8a;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 0.9rem;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 960px) {
+      .layout {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .main {
+        padding: 14px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -40,52 +330,105 @@
       <div class="brand">
         <h1>PaperBanana API</h1>
         <p>版本 0.1.2</p>
-        <p>静态文档自动生成</p>
+        <p>自动生成静态文档</p>
       </div>
-      <nav class="nav">
-        <a href="#overview">概览</a>
-        
-        <a href="#post-api-v1-tasks-continue">POST /api/v1/tasks/continue</a>
-        
-        <a href="#post-api-v1-tasks-evaluate">POST /api/v1/tasks/evaluate</a>
-        
-        <a href="#post-api-v1-tasks-generate">POST /api/v1/tasks/generate</a>
-        
-        <a href="#post-api-v1-tasks-plot">POST /api/v1/tasks/plot</a>
-        
-        <a href="#get-api-v1-tasks-task_id">GET /api/v1/tasks/{task_id}</a>
-        
-        <a href="#get-api-v1-tasks-task_id-artifact">GET /api/v1/tasks/{task_id}/artifact</a>
-        
-        <a href="#get-health">GET /health</a>
-        
-      </nav>
+      <div class="nav-wrap">
+        <div class="nav-group">
+          <h3>快速开始</h3>
+          <a class="nav-item active" href="#overview">概览</a>
+          <a class="nav-item" href="#authentication">鉴权</a>
+        </div>
+        <div class="nav-group">
+          <h3>API 端点</h3>
+          
+          <a class="nav-item" href="#post-api-v1-tasks-continue">
+            <span class="method post">POST</span>
+            <span>/api/v1/tasks/continue</span>
+          </a>
+          
+          <a class="nav-item" href="#post-api-v1-tasks-evaluate">
+            <span class="method post">POST</span>
+            <span>/api/v1/tasks/evaluate</span>
+          </a>
+          
+          <a class="nav-item" href="#post-api-v1-tasks-generate">
+            <span class="method post">POST</span>
+            <span>/api/v1/tasks/generate</span>
+          </a>
+          
+          <a class="nav-item" href="#post-api-v1-tasks-plot">
+            <span class="method post">POST</span>
+            <span>/api/v1/tasks/plot</span>
+          </a>
+          
+          <a class="nav-item" href="#get-api-v1-tasks-task_id">
+            <span class="method get">GET</span>
+            <span>/api/v1/tasks/{task_id}</span>
+          </a>
+          
+          <a class="nav-item" href="#get-api-v1-tasks-task_id-artifact">
+            <span class="method get">GET</span>
+            <span>/api/v1/tasks/{task_id}/artifact</span>
+          </a>
+          
+          <a class="nav-item" href="#get-health">
+            <span class="method get">GET</span>
+            <span>/health</span>
+          </a>
+          
+        </div>
+      </div>
     </aside>
     <main class="main">
       <section id="overview" class="card">
         <h2>API 概览</h2>
-        <p class="muted">生成时间：2026-02-26 20:31:43</p>
         <p>PaperBanana HTTP API：将生成、续跑、评测能力统一封装为异步任务接口。 通用流程： 1. 提交任务（POST） 2. 轮询状态（GET /api/v1/tasks/{task_id}） 3. 下载结果（GET /api/v1/tasks/{task_id}/artifact）</p>
+        <div class="overview-grid">
+          <div class="metric">
+            <div class="k">Base URL</div>
+            <div class="v"><code>https://api.paperbanana.me</code></div>
+          </div>
+          <div class="metric">
+            <div class="k">端点数量</div>
+            <div class="v">7</div>
+          </div>
+          <div class="metric">
+            <div class="k">生成时间</div>
+            <div class="v">2026-02-26 21:06:02</div>
+          </div>
+        </div>
+        <p class="note">调用流程：提交任务 -> 轮询状态 -> 下载结果。任务均为异步执行。</p>
+      </section>
+
+      <section id="authentication" class="card">
+        <h3>鉴权</h3>
+        <p>除健康检查与文档接口外，业务接口都需要 Bearer Token。</p>
+        <div class="auth-box"><code>Authorization: Bearer &lt;PAPERBANANA_API_TOKEN&gt;</code></div>
       </section>
 
       
       <section id="post-api-v1-tasks-continue" class="card">
-        <h3 class="endpoint-title">
-          <span class="badge post">POST</span>
+        <div class="endpoint-head">
+          <span class="method post">POST</span>
           <span class="path">/api/v1/tasks/continue</span>
-        </h3>
+        </div>
         <p><strong>Create Continue Task</strong></p>
-        <p>Submit a continue-run task.</p>
+        <p class="meta">Submit a continue-run task.</p>
         
-        <p class="muted">标签：Tasks</p>
+        <div>
+          
+          <span class="tag">Tasks</span>
+          
+        </div>
         
 
         
-        <p><strong>请求 Content-Type：</strong>application/json</p>
+        <span class="label">请求 Content-Type</span>
+        <p><code>application/json</code></p>
         
 
         
-        <p><strong>请求示例：</strong></p>
+        <span class="label">请求示例</span>
         <pre><code>{
   "run_id": "run_20260226_120000_ab12cd",
   "additional_iterations": 2,
@@ -94,7 +437,7 @@
         
 
         
-        <p><strong>响应：</strong></p>
+        <span class="label">响应</span>
         <table>
           <thead>
             <tr><th>状态码</th><th>说明</th></tr>
@@ -109,7 +452,7 @@
         </table>
         
 
-        <p><strong>cURL：</strong></p>
+        <span class="label">cURL</span>
         <pre><code>curl -X POST "https://api.paperbanana.me/api/v1/tasks/continue" -H "Authorization: Bearer <PAPERBANANA_API_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -120,29 +463,29 @@
       </section>
       
       <section id="post-api-v1-tasks-evaluate" class="card">
-        <h3 class="endpoint-title">
-          <span class="badge post">POST</span>
+        <div class="endpoint-head">
+          <span class="method post">POST</span>
           <span class="path">/api/v1/tasks/evaluate</span>
-        </h3>
+        </div>
         <p><strong>Create Evaluate Task</strong></p>
-        <p>Submit an evaluation task via multipart file upload.</p>
+        <p class="meta">Submit an evaluation task via multipart file upload.</p>
         
-        <p class="muted">标签：Tasks</p>
-        
-
-        
-        <p><strong>请求 Content-Type：</strong>multipart/form-data</p>
-        
-
-        
-        <p><strong>请求示例：</strong></p>
-        <pre><code>{
-  "$ref": "#/components/schemas/Body_create_evaluate_task_api_v1_tasks_evaluate_post"
-}</code></pre>
+        <div>
+          
+          <span class="tag">Tasks</span>
+          
+        </div>
         
 
         
-        <p><strong>响应：</strong></p>
+        <span class="label">请求 Content-Type</span>
+        <p><code>multipart/form-data</code></p>
+        
+
+        
+
+        
+        <span class="label">响应</span>
         <table>
           <thead>
             <tr><th>状态码</th><th>说明</th></tr>
@@ -157,7 +500,7 @@
         </table>
         
 
-        <p><strong>cURL：</strong></p>
+        <span class="label">cURL</span>
         <pre><code>curl -X POST "https://api.paperbanana.me/api/v1/tasks/evaluate" -H "Authorization: Bearer <PAPERBANANA_API_TOKEN>" \
   -F "generated_image=@generated.png" \
   -F "reference_image=@reference.png" \
@@ -166,22 +509,27 @@
       </section>
       
       <section id="post-api-v1-tasks-generate" class="card">
-        <h3 class="endpoint-title">
-          <span class="badge post">POST</span>
+        <div class="endpoint-head">
+          <span class="method post">POST</span>
           <span class="path">/api/v1/tasks/generate</span>
-        </h3>
+        </div>
         <p><strong>Create Generate Task</strong></p>
-        <p>Submit a methodology-diagram generation task.</p>
+        <p class="meta">Submit a methodology-diagram generation task.</p>
         
-        <p class="muted">标签：Tasks</p>
+        <div>
+          
+          <span class="tag">Tasks</span>
+          
+        </div>
         
 
         
-        <p><strong>请求 Content-Type：</strong>application/json</p>
+        <span class="label">请求 Content-Type</span>
+        <p><code>application/json</code></p>
         
 
         
-        <p><strong>请求示例：</strong></p>
+        <span class="label">请求示例</span>
         <pre><code>{
   "source_context": "我们的方法分为检索、规划、迭代精化三个阶段。",
   "communicative_intent": "方法整体流程图",
@@ -191,7 +539,7 @@
         
 
         
-        <p><strong>响应：</strong></p>
+        <span class="label">响应</span>
         <table>
           <thead>
             <tr><th>状态码</th><th>说明</th></tr>
@@ -206,7 +554,7 @@
         </table>
         
 
-        <p><strong>cURL：</strong></p>
+        <span class="label">cURL</span>
         <pre><code>curl -X POST "https://api.paperbanana.me/api/v1/tasks/generate" -H "Authorization: Bearer <PAPERBANANA_API_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -218,22 +566,27 @@
       </section>
       
       <section id="post-api-v1-tasks-plot" class="card">
-        <h3 class="endpoint-title">
-          <span class="badge post">POST</span>
+        <div class="endpoint-head">
+          <span class="method post">POST</span>
           <span class="path">/api/v1/tasks/plot</span>
-        </h3>
+        </div>
         <p><strong>Create Plot Task</strong></p>
-        <p>Submit a statistical-plot generation task.</p>
+        <p class="meta">Submit a statistical-plot generation task.</p>
         
-        <p class="muted">标签：Tasks</p>
+        <div>
+          
+          <span class="tag">Tasks</span>
+          
+        </div>
         
 
         
-        <p><strong>请求 Content-Type：</strong>application/json</p>
+        <span class="label">请求 Content-Type</span>
+        <p><code>application/json</code></p>
         
 
         
-        <p><strong>请求示例：</strong></p>
+        <span class="label">请求示例</span>
         <pre><code>{
   "intent": "比较不同模型在三个基准上的准确率",
   "raw_data": {
@@ -258,7 +611,7 @@
         
 
         
-        <p><strong>响应：</strong></p>
+        <span class="label">响应</span>
         <table>
           <thead>
             <tr><th>状态码</th><th>说明</th></tr>
@@ -273,7 +626,7 @@
         </table>
         
 
-        <p><strong>cURL：</strong></p>
+        <span class="label">cURL</span>
         <pre><code>curl -X POST "https://api.paperbanana.me/api/v1/tasks/plot" -H "Authorization: Bearer <PAPERBANANA_API_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -300,14 +653,18 @@
       </section>
       
       <section id="get-api-v1-tasks-task_id" class="card">
-        <h3 class="endpoint-title">
-          <span class="badge get">GET</span>
+        <div class="endpoint-head">
+          <span class="method get">GET</span>
           <span class="path">/api/v1/tasks/{task_id}</span>
-        </h3>
+        </div>
         <p><strong>Get Task</strong></p>
-        <p>Get task status.</p>
+        <p class="meta">Get task status.</p>
         
-        <p class="muted">标签：Tasks</p>
+        <div>
+          
+          <span class="tag">Tasks</span>
+          
+        </div>
         
 
         
@@ -315,7 +672,7 @@
         
 
         
-        <p><strong>响应：</strong></p>
+        <span class="label">响应</span>
         <table>
           <thead>
             <tr><th>状态码</th><th>说明</th></tr>
@@ -330,19 +687,23 @@
         </table>
         
 
-        <p><strong>cURL：</strong></p>
+        <span class="label">cURL</span>
         <pre><code>curl -X GET "https://api.paperbanana.me/api/v1/tasks/{task_id}" -H "Authorization: Bearer <PAPERBANANA_API_TOKEN>"</code></pre>
       </section>
       
       <section id="get-api-v1-tasks-task_id-artifact" class="card">
-        <h3 class="endpoint-title">
-          <span class="badge get">GET</span>
+        <div class="endpoint-head">
+          <span class="method get">GET</span>
           <span class="path">/api/v1/tasks/{task_id}/artifact</span>
-        </h3>
+        </div>
         <p><strong>Download Task Artifact</strong></p>
-        <p>Download task artifact (image/json).</p>
+        <p class="meta">Download task artifact (image/json).</p>
         
-        <p class="muted">标签：Tasks</p>
+        <div>
+          
+          <span class="tag">Tasks</span>
+          
+        </div>
         
 
         
@@ -350,7 +711,7 @@
         
 
         
-        <p><strong>响应：</strong></p>
+        <span class="label">响应</span>
         <table>
           <thead>
             <tr><th>状态码</th><th>说明</th></tr>
@@ -365,19 +726,23 @@
         </table>
         
 
-        <p><strong>cURL：</strong></p>
+        <span class="label">cURL</span>
         <pre><code>curl -X GET "https://api.paperbanana.me/api/v1/tasks/{task_id}/artifact" -H "Authorization: Bearer <PAPERBANANA_API_TOKEN>"</code></pre>
       </section>
       
       <section id="get-health" class="card">
-        <h3 class="endpoint-title">
-          <span class="badge get">GET</span>
+        <div class="endpoint-head">
+          <span class="method get">GET</span>
           <span class="path">/health</span>
-        </h3>
+        </div>
         <p><strong>Health Check</strong></p>
-        <p>Health endpoint for liveness checks.</p>
+        <p class="meta">Health endpoint for liveness checks.</p>
         
-        <p class="muted">标签：Health</p>
+        <div>
+          
+          <span class="tag">Health</span>
+          
+        </div>
         
 
         
@@ -385,7 +750,7 @@
         
 
         
-        <p><strong>响应：</strong></p>
+        <span class="label">响应</span>
         <table>
           <thead>
             <tr><th>状态码</th><th>说明</th></tr>
@@ -398,11 +763,55 @@
         </table>
         
 
-        <p><strong>cURL：</strong></p>
-        <pre><code>curl -X GET "https://api.paperbanana.me/health" -H "Authorization: Bearer <PAPERBANANA_API_TOKEN>"</code></pre>
+        <span class="label">cURL</span>
+        <pre><code>curl -X GET "https://api.paperbanana.me/health"</code></pre>
       </section>
       
     </main>
   </div>
+  <script>
+    const links = Array.from(document.querySelectorAll(".nav-item[href^='#']"));
+    const map = new Map(
+      links
+        .map((link) => {
+          const target = document.querySelector(link.getAttribute("href"));
+          return target ? [target, link] : null;
+        })
+        .filter(Boolean),
+    );
+
+    const activate = (link) => {
+      links.forEach((node) => node.classList.remove("active"));
+      if (link) {
+        link.classList.add("active");
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) {
+          activate(map.get(visible.target));
+        }
+      },
+      { rootMargin: "-25% 0px -65% 0px", threshold: [0.12, 0.3, 0.55] },
+    );
+
+    map.forEach((_, section) => observer.observe(section));
+
+    links.forEach((link) => {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        const target = document.querySelector(link.getAttribute("href"));
+        if (!target) {
+          return;
+        }
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+        activate(link);
+      });
+    });
+  </script>
 </body>
 </html>

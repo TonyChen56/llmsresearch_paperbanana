@@ -41,6 +41,8 @@ def _extract_request_example(operation: dict[str, Any]) -> str | None:
                 return json.dumps(value, ensure_ascii=False, indent=2)
         schema = media.get("schema")
         if schema is not None:
+            if isinstance(schema, dict) and "$ref" in schema:
+                continue
             return json.dumps(schema, ensure_ascii=False, indent=2)
     return None
 
@@ -53,16 +55,18 @@ def _build_curl_example(
 ) -> str:
     base = "https://api.paperbanana.me"
     auth = '-H "Authorization: Bearer <PAPERBANANA_API_TOKEN>"'
+    requires_auth = path.startswith("/api/v1/")
+    auth_clause = f" {auth}" if requires_auth else ""
     method_upper = method.upper()
     request_body = operation.get("requestBody", {})
     content = request_body.get("content", {})
 
     if method_upper in {"GET", "DELETE"}:
-        return f'curl -X {method_upper} "{base}{path}" {auth}'
+        return f'curl -X {method_upper} "{base}{path}"{auth_clause}'
 
     if "multipart/form-data" in content:
         return (
-            f'curl -X {method_upper} "{base}{path}" {auth} \\\n'
+            f'curl -X {method_upper} "{base}{path}"{auth_clause} \\\n'
             '  -F "generated_image=@generated.png" \\\n'
             '  -F "reference_image=@reference.png" \\\n'
             '  -F "source_context=..." \\\n'
@@ -71,7 +75,7 @@ def _build_curl_example(
 
     body = example or "{}"
     return (
-        f'curl -X {method_upper} "{base}{path}" {auth} \\\n'
+        f'curl -X {method_upper} "{base}{path}"{auth_clause} \\\n'
         '  -H "Content-Type: application/json" \\\n'
         f"  -d '{body}'"
     )
