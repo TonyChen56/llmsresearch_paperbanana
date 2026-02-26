@@ -71,6 +71,18 @@ class KieNanoBananaImageGen(ImageGenProvider):
             return "portrait format (2:3)"
         return "square format (1:1)"
 
+    def _kie_image_size(self, width: int, height: int) -> str:
+        ratio = width / height
+        if ratio > 1.5:
+            return "16:9"
+        if ratio > 1.2:
+            return "3:2"
+        if ratio < 0.67:
+            return "9:16"
+        if ratio < 0.83:
+            return "2:3"
+        return "1:1"
+
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=2, max=30))
     async def generate(
         self,
@@ -88,10 +100,11 @@ class KieNanoBananaImageGen(ImageGenProvider):
             full_prompt += f"\n\nAvoid: {negative_prompt}"
 
         payload = {
-            "taskType": "generate",
+            "model": self._model,
             "input": {
-                "model": self._model,
-                "prompt": full_prompt,
+                "prompt": full_prompt[:5000],
+                "output_format": "png",
+                "image_size": self._kie_image_size(width, height),
             },
         }
         if seed is not None:
@@ -100,6 +113,8 @@ class KieNanoBananaImageGen(ImageGenProvider):
         create_response = await client.post("/api/v1/jobs/createTask", json=payload)
         create_response.raise_for_status()
         task_payload = create_response.json()
+        if task_payload.get("code") not in {None, 200}:
+            raise ValueError(f"KIE createTask failed: {task_payload}")
 
         task_data = self._unwrap_data(task_payload)
         task_id = (
@@ -129,6 +144,8 @@ class KieNanoBananaImageGen(ImageGenProvider):
             response = await client.get("/api/v1/jobs/recordInfo", params={"taskId": task_id})
             response.raise_for_status()
             payload = response.json()
+            if payload.get("code") not in {None, 200}:
+                raise ValueError(f"KIE recordInfo failed: {payload}")
             data = self._unwrap_data(payload)
 
             urls = self._extract_result_urls(data)

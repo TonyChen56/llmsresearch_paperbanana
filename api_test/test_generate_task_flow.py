@@ -40,6 +40,23 @@ def _load_token_from_env_file() -> str | None:
     return None
 
 
+def _load_optional_env_value(key_name: str) -> str | None:
+    env_path = _project_root() / ".env"
+    if not env_path.exists():
+        return None
+
+    for raw in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        if key.strip() != key_name:
+            continue
+        val = value.strip().strip("'\"")
+        return val or None
+    return None
+
+
 def _build_headers(base_url: str, token: str, content_type: str | None = None) -> dict[str, str]:
     headers = {
         "Authorization": f"Bearer {token}",
@@ -147,7 +164,7 @@ def run(args: argparse.Namespace) -> int:
         return 2
     source_context = prompt_path.read_text(encoding="utf-8")
 
-    base_url = BASE_URL
+    base_url = (args.base_url or BASE_URL).rstrip("/")
     submit_url = f"{base_url}/api/v1/tasks/generate"
     payload: dict[str, Any] = {
         "source_context": source_context,
@@ -155,6 +172,15 @@ def run(args: argparse.Namespace) -> int:
         "refinement_iterations": args.refinement_iterations,
         "optimize_inputs": args.optimize_inputs,
     }
+    providers_payload = {
+        "vlm_provider": args.vlm_provider,
+        "vlm_model": args.vlm_model,
+        "image_provider": args.image_provider,
+        "image_model": args.image_model,
+    }
+    providers_payload = {k: v for k, v in providers_payload.items() if v}
+    if providers_payload:
+        payload["providers"] = providers_payload
 
     print(f"[1/3] 提交任务: {submit_url}")
     submit_resp = _http_json(
@@ -233,6 +259,11 @@ def run(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="测试提交生成任务接口并下载图片")
     parser.add_argument(
+        "--base-url",
+        default=os.getenv("PAPERBANANA_API_BASE_URL") or BASE_URL,
+        help="API 根地址（默认 https://api1.paperbanana.me）",
+    )
+    parser.add_argument(
         "--prompt-file",
         default=str(_project_root() / "examples" / "sample_inputs" / "transformer_method.txt"),
         help="项目内提示词文件路径",
@@ -242,10 +273,30 @@ def build_parser() -> argparse.ArgumentParser:
         default="Overview of our encoder-decoder architecture with sparse routing",
         help="图表标题",
     )
-    parser.add_argument("--refinement-iterations", type=int, default=2, help="精化迭代次数")
+    parser.add_argument("--refinement-iterations", type=int, default=1, help="精化迭代次数")
     parser.add_argument("--optimize-inputs", action="store_true", help="是否启用输入优化")
+    parser.add_argument(
+        "--vlm-provider",
+        default=os.getenv("PB_VLM_PROVIDER") or _load_optional_env_value("VLM_PROVIDER"),
+        help="可选：覆盖 VLM provider（如 kie/openai/gemini）",
+    )
+    parser.add_argument(
+        "--vlm-model",
+        default=os.getenv("PB_VLM_MODEL") or _load_optional_env_value("VLM_MODEL"),
+        help="可选：覆盖 VLM 模型名",
+    )
+    parser.add_argument(
+        "--image-provider",
+        default=os.getenv("PB_IMAGE_PROVIDER") or _load_optional_env_value("IMAGE_PROVIDER"),
+        help="可选：覆盖图像 provider（如 kie_nano_banana/openai_imagen）",
+    )
+    parser.add_argument(
+        "--image-model",
+        default=os.getenv("PB_IMAGE_MODEL") or _load_optional_env_value("IMAGE_MODEL"),
+        help="可选：覆盖图像模型名",
+    )
     parser.add_argument("--poll-interval-seconds", type=int, default=5, help="轮询间隔秒数")
-    parser.add_argument("--timeout-seconds", type=int, default=600, help="轮询超时秒数")
+    parser.add_argument("--timeout-seconds", type=int, default=1800, help="轮询超时秒数")
     parser.add_argument("--network-retries", type=int, default=3, help="单次请求的网络重试次数")
     return parser
 
