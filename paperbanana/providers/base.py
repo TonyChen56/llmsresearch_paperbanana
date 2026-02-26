@@ -76,6 +76,11 @@ class ImageGenProvider(ABC):
         """Model identifier being used."""
         ...
 
+    @property
+    def supported_ratios(self) -> list[str]:
+        """Aspect ratios this provider supports. Override in subclasses."""
+        return ["1:1", "16:9"]  # conservative default
+
     @abstractmethod
     async def generate(
         self,

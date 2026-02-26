@@ -262,6 +262,7 @@ class PaperBananaPipeline:
             caption=input.communicative_intent,
             examples=examples,
             diagram_type=input.diagram_type,
+            supported_ratios=getattr(self.visualizer.image_gen, "supported_ratios", None),
         )
         planning_seconds = time.perf_counter() - planning_start
         logger.info(

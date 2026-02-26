@@ -63,6 +63,11 @@ class OpenRouterImageGen(ImageGenProvider):
     def is_available(self) -> bool:
         return self._api_key is not None
 
+    @property
+    def supported_ratios(self) -> list[str]:
+        # Prompt-based hints — any ratio is conceptually supported
+        return ["1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "21:9"]
+
     def _aspect_ratio_hint(self, width: int, height: int) -> str:
         """Turn pixel dimensions into a human-readable aspect ratio hint for the prompt."""
         ratio = width / height

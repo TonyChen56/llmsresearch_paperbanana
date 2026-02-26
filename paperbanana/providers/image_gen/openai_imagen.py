@@ -60,6 +60,11 @@ class OpenAIImageGen(ImageGenProvider):
     def is_available(self) -> bool:
         return self._api_key is not None
 
+    @property
+    def supported_ratios(self) -> list[str]:
+        # OpenAI only has 3 native sizes: 1024x1024, 1536x1024, 1024x1536
+        return ["1:1", "3:2", "2:3"]
+
     def _size_string(self, width: int, height: int) -> str:
         """Map pixel dimensions to an OpenAI-supported size string."""
         ratio = width / height

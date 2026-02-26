@@ -36,6 +36,7 @@ class PlannerAgent(BaseAgent):
         caption: str,
         examples: list[ReferenceExample],
         diagram_type: DiagramType = DiagramType.METHODOLOGY,
+        supported_ratios: list[str] | None = None,
     ) -> tuple[str, str | None]:
         """Generate a detailed textual description of the target diagram.
 
@@ -44,6 +45,7 @@ class PlannerAgent(BaseAgent):
             caption: Communicative intent / figure caption.
             examples: Retrieved reference examples for in-context learning.
             diagram_type: Type of diagram being generated.
+            supported_ratios: Aspect ratios the image provider supports.
 
         Returns:
             Tuple of (description, recommended_ratio).
@@ -57,11 +59,14 @@ class PlannerAgent(BaseAgent):
 
         prompt_type = "diagram" if diagram_type == DiagramType.METHODOLOGY else "plot"
         template = self.load_prompt(prompt_type)
+        # Inject supported ratios into the prompt template
+        ratios_str = ", ".join(supported_ratios) if supported_ratios else "1:1, 16:9"
         prompt = self.format_prompt(
             template,
             source_context=source_context,
             caption=caption,
             examples=examples_text,
+            supported_ratios=ratios_str,
         )
 
         logger.info(
