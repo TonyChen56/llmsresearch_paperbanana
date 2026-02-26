@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PaperBanana API 文档</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; background: #f7f8fa; color: #1f2937; }
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar { width: 300px; background: #fff; border-right: 1px solid #e5e7eb; padding: 24px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+    .brand { padding: 0 24px 16px; border-bottom: 1px solid #e5e7eb; margin-bottom: 12px; }
+    .brand h1 { margin: 0; font-size: 20px; color: #2563eb; }
+    .brand p { margin: 6px 0 0; color: #6b7280; font-size: 13px; }
+    .nav { padding: 8px 16px; }
+    .nav a { display: block; padding: 8px 10px; margin-bottom: 4px; border-radius: 8px; color: #374151; text-decoration: none; font-size: 14px; }
+    .nav a:hover { background: #eff6ff; color: #1d4ed8; }
+    .main { flex: 1; padding: 24px; max-width: 1200px; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .card h2 { margin: 0 0 10px; }
+    .muted { color: #6b7280; font-size: 13px; }
+    .endpoint-title { margin: 0 0 10px; font-size: 18px; }
+    .badge { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 10px; margin-right: 8px; }
+    .get { background: #dcfce7; color: #166534; }
+    .post { background: #dbeafe; color: #1e3a8a; }
+    .put { background: #fef3c7; color: #92400e; }
+    .patch { background: #f3e8ff; color: #6b21a8; }
+    .delete { background: #fee2e2; color: #991b1b; }
+    .path { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #f3f4f6; border-radius: 6px; padding: 2px 8px; }
+    pre { background: #111827; color: #e5e7eb; border-radius: 10px; padding: 12px; overflow-x: auto; font-size: 13px; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+    th { background: #f9fafb; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>PaperBanana API</h1>
+        <p>版本 0.1.2</p>
+        <p>静态文档自动生成</p>
+      </div>
+      <nav class="nav">
+        <a href="#overview">概览</a>
+        
+        <a href="#post-api-v1-tasks-continue">POST /api/v1/tasks/continue</a>
+        
+        <a href="#post-api-v1-tasks-evaluate">POST /api/v1/tasks/evaluate</a>
+        
+        <a href="#post-api-v1-tasks-generate">POST /api/v1/tasks/generate</a>
+        
+        <a href="#post-api-v1-tasks-plot">POST /api/v1/tasks/plot</a>
+        
+        <a href="#get-api-v1-tasks-task_id">GET /api/v1/tasks/{task_id}</a>
+        
+        <a href="#get-api-v1-tasks-task_id-artifact">GET /api/v1/tasks/{task_id}/artifact</a>
+        
+        <a href="#get-health">GET /health</a>
+        
+      </nav>
+    </aside>
+    <main class="main">
+      <section id="overview" class="card">
+        <h2>API 概览</h2>
+        <p class="muted">生成时间：2026-02-26 20:31:43</p>
+        <p>PaperBanana HTTP API：将生成、续跑、评测能力统一封装为异步任务接口。 通用流程： 1. 提交任务（POST） 2. 轮询状态（GET /api/v1/tasks/{task_id}） 3. 下载结果（GET /api/v1/tasks/{task_id}/artifact）</p>
+      </section>
+
+      
+      <section id="post-api-v1-tasks-continue" class="card">
+        <h3 class="endpoint-title">
+          <span class="badge post">POST</span>
+          <span class="path">/api/v1/tasks/continue</span>
+        </h3>
+        <p><strong>Create Continue Task</strong></p>
+        <p>Submit a continue-run task.</p>
+        
+        <p class="muted">标签：Tasks</p>
+        
+
+        
+        <p><strong>请求 Content-Type：</strong>application/json</p>
+        
+
+        
+        <p><strong>请求示例：</strong></p>
+        <pre><code>{
+  "run_id": "run_20260226_120000_ab12cd",
+  "additional_iterations": 2,
+  "user_feedback": "把箭头更粗一些，阶段颜色区分更明显。"
+}</code></pre>
+        
+
+        
+        <p><strong>响应：</strong></p>
+        <table>
+          <thead>
+            <tr><th>状态码</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            
+            <tr><td>202</td><td>Successful Response</td></tr>
+            
+            <tr><td>422</td><td>Validation Error</td></tr>
+            
+          </tbody>
+        </table>
+        
+
+        <p><strong>cURL：</strong></p>
+        <pre><code>curl -X POST "https://api.paperbanana.me/api/v1/tasks/continue" -H "Authorization: Bearer <PAPERBANANA_API_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "run_id": "run_20260226_120000_ab12cd",
+  "additional_iterations": 2,
+  "user_feedback": "把箭头更粗一些，阶段颜色区分更明显。"
+}'</code></pre>
+      </section>
+      
+      <section id="post-api-v1-tasks-evaluate" class="card">
+        <h3 class="endpoint-title">
+          <span class="badge post">POST</span>
+          <span class="path">/api/v1/tasks/evaluate</span>
+        </h3>
+        <p><strong>Create Evaluate Task</strong></p>
+        <p>Submit an evaluation task via multipart file upload.</p>
+        
+        <p class="muted">标签：Tasks</p>
+        
+
+        
+        <p><strong>请求 Content-Type：</strong>multipart/form-data</p>
+        
+
+        
+        <p><strong>请求示例：</strong></p>
+        <pre><code>{
+  "$ref": "#/components/schemas/Body_create_evaluate_task_api_v1_tasks_evaluate_post"
+}</code></pre>
+        
+
+        
+        <p><strong>响应：</strong></p>
+        <table>
+          <thead>
+            <tr><th>状态码</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            
+            <tr><td>202</td><td>Successful Response</td></tr>
+            
+            <tr><td>422</td><td>Validation Error</td></tr>
+            
+          </tbody>
+        </table>
+        
+
+        <p><strong>cURL：</strong></p>
+        <pre><code>curl -X POST "https://api.paperbanana.me/api/v1/tasks/evaluate" -H "Authorization: Bearer <PAPERBANANA_API_TOKEN>" \
+  -F "generated_image=@generated.png" \
+  -F "reference_image=@reference.png" \
+  -F "source_context=..." \
+  -F "caption=..."</code></pre>
+      </section>
+      
+      <section id="post-api-v1-tasks-generate" class="card">
+        <h3 class="endpoint-title">
+          <span class="badge post">POST</span>
+          <span class="path">/api/v1/tasks/generate</span>
+        </h3>
+        <p><strong>Create Generate Task</strong></p>
+        <p>Submit a methodology-diagram generation task.</p>
+        
+        <p class="muted">标签：Tasks</p>
+        
+
+        
+        <p><strong>请求 Content-Type：</strong>application/json</p>
+        
+
+        
+        <p><strong>请求示例：</strong></p>
+        <pre><code>{
+  "source_context": "我们的方法分为检索、规划、迭代精化三个阶段。",
+  "communicative_intent": "方法整体流程图",
+  "refinement_iterations": 3,
+  "optimize_inputs": true
+}</code></pre>
+        
+
+        
+        <p><strong>响应：</strong></p>
+        <table>
+          <thead>
+            <tr><th>状态码</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            
+            <tr><td>202</td><td>Successful Response</td></tr>
+            
+            <tr><td>422</td><td>Validation Error</td></tr>
+            
+          </tbody>
+        </table>
+        
+
+        <p><strong>cURL：</strong></p>
+        <pre><code>curl -X POST "https://api.paperbanana.me/api/v1/tasks/generate" -H "Authorization: Bearer <PAPERBANANA_API_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "source_context": "我们的方法分为检索、规划、迭代精化三个阶段。",
+  "communicative_intent": "方法整体流程图",
+  "refinement_iterations": 3,
+  "optimize_inputs": true
+}'</code></pre>
+      </section>
+      
+      <section id="post-api-v1-tasks-plot" class="card">
+        <h3 class="endpoint-title">
+          <span class="badge post">POST</span>
+          <span class="path">/api/v1/tasks/plot</span>
+        </h3>
+        <p><strong>Create Plot Task</strong></p>
+        <p>Submit a statistical-plot generation task.</p>
+        
+        <p class="muted">标签：Tasks</p>
+        
+
+        
+        <p><strong>请求 Content-Type：</strong>application/json</p>
+        
+
+        
+        <p><strong>请求示例：</strong></p>
+        <pre><code>{
+  "intent": "比较不同模型在三个基准上的准确率",
+  "raw_data": {
+    "models": [
+      "A",
+      "B",
+      "C"
+    ],
+    "mmlu": [
+      85.2,
+      88.1,
+      90.3
+    ],
+    "arc": [
+      78.0,
+      80.5,
+      82.9
+    ]
+  },
+  "refinement_iterations": 2
+}</code></pre>
+        
+
+        
+        <p><strong>响应：</strong></p>
+        <table>
+          <thead>
+            <tr><th>状态码</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            
+            <tr><td>202</td><td>Successful Response</td></tr>
+            
+            <tr><td>422</td><td>Validation Error</td></tr>
+            
+          </tbody>
+        </table>
+        
+
+        <p><strong>cURL：</strong></p>
+        <pre><code>curl -X POST "https://api.paperbanana.me/api/v1/tasks/plot" -H "Authorization: Bearer <PAPERBANANA_API_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "intent": "比较不同模型在三个基准上的准确率",
+  "raw_data": {
+    "models": [
+      "A",
+      "B",
+      "C"
+    ],
+    "mmlu": [
+      85.2,
+      88.1,
+      90.3
+    ],
+    "arc": [
+      78.0,
+      80.5,
+      82.9
+    ]
+  },
+  "refinement_iterations": 2
+}'</code></pre>
+      </section>
+      
+      <section id="get-api-v1-tasks-task_id" class="card">
+        <h3 class="endpoint-title">
+          <span class="badge get">GET</span>
+          <span class="path">/api/v1/tasks/{task_id}</span>
+        </h3>
+        <p><strong>Get Task</strong></p>
+        <p>Get task status.</p>
+        
+        <p class="muted">标签：Tasks</p>
+        
+
+        
+
+        
+
+        
+        <p><strong>响应：</strong></p>
+        <table>
+          <thead>
+            <tr><th>状态码</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            
+            <tr><td>200</td><td>Successful Response</td></tr>
+            
+            <tr><td>422</td><td>Validation Error</td></tr>
+            
+          </tbody>
+        </table>
+        
+
+        <p><strong>cURL：</strong></p>
+        <pre><code>curl -X GET "https://api.paperbanana.me/api/v1/tasks/{task_id}" -H "Authorization: Bearer <PAPERBANANA_API_TOKEN>"</code></pre>
+      </section>
+      
+      <section id="get-api-v1-tasks-task_id-artifact" class="card">
+        <h3 class="endpoint-title">
+          <span class="badge get">GET</span>
+          <span class="path">/api/v1/tasks/{task_id}/artifact</span>
+        </h3>
+        <p><strong>Download Task Artifact</strong></p>
+        <p>Download task artifact (image/json).</p>
+        
+        <p class="muted">标签：Tasks</p>
+        
+
+        
+
+        
+
+        
+        <p><strong>响应：</strong></p>
+        <table>
+          <thead>
+            <tr><th>状态码</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            
+            <tr><td>200</td><td>Successful Response</td></tr>
+            
+            <tr><td>422</td><td>Validation Error</td></tr>
+            
+          </tbody>
+        </table>
+        
+
+        <p><strong>cURL：</strong></p>
+        <pre><code>curl -X GET "https://api.paperbanana.me/api/v1/tasks/{task_id}/artifact" -H "Authorization: Bearer <PAPERBANANA_API_TOKEN>"</code></pre>
+      </section>
+      
+      <section id="get-health" class="card">
+        <h3 class="endpoint-title">
+          <span class="badge get">GET</span>
+          <span class="path">/health</span>
+        </h3>
+        <p><strong>Health Check</strong></p>
+        <p>Health endpoint for liveness checks.</p>
+        
+        <p class="muted">标签：Health</p>
+        
+
+        
+
+        
+
+        
+        <p><strong>响应：</strong></p>
+        <table>
+          <thead>
+            <tr><th>状态码</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            
+            <tr><td>200</td><td>Successful Response</td></tr>
+            
+          </tbody>
+        </table>
+        
+
+        <p><strong>cURL：</strong></p>
+        <pre><code>curl -X GET "https://api.paperbanana.me/health" -H "Authorization: Bearer <PAPERBANANA_API_TOKEN>"</code></pre>
+      </section>
+      
+    </main>
+  </div>
+</body>
+</html>

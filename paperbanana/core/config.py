@@ -78,6 +78,11 @@ class Settings(BaseSettings):
     output_format: OutputFormat = "png"
     save_iterations: bool = True
 
+    # API runtime settings
+    api_max_concurrent_tasks: int = Field(default=3, alias="API_MAX_CONCURRENT_TASKS")
+    api_task_ttl_minutes: int = Field(default=120, alias="API_TASK_TTL_MINUTES")
+    paperbanana_api_token: Optional[str] = Field(default=None, alias="PAPERBANANA_API_TOKEN")
+
     # API Keys (loaded from environment)
     google_api_key: Optional[str] = Field(default=None, alias="GOOGLE_API_KEY")
     openrouter_api_key: Optional[str] = Field(default=None, alias="OPENROUTER_API_KEY")
@@ -160,6 +165,8 @@ def _flatten_yaml(config: dict, prefix: str = "") -> dict:
         "output.dir": "output_dir",
         "output.format": "output_format",
         "output.save_iterations": "save_iterations",
+        "api.max_concurrent_tasks": "api_max_concurrent_tasks",
+        "api.task_ttl_minutes": "api_task_ttl_minutes",
     }
 
     def _recurse(d: dict, prefix: str = "") -> None:

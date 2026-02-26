@@ -32,13 +32,13 @@
 > This project is **not affiliated with or endorsed by** the original authors or Google Research.
 > The implementation is based on the publicly available paper and may differ from the original system.
 
-An agentic framework for generating publication-quality academic diagrams and statistical plots from text descriptions. Supports OpenAI (GPT-5.2 + GPT-Image-1.5), Azure OpenAI / Foundry, and Google Gemini providers.
+An agentic framework for generating publication-quality academic diagrams and statistical plots from text descriptions. Supports OpenAI (GPT-5.2 + GPT-Image-1.5), Azure OpenAI / Foundry, Google Gemini, OpenRouter, and KIE providers.
 
 - Two-phase multi-agent pipeline with iterative refinement
-- Multiple VLM and image generation providers (OpenAI, Azure, Gemini)
+- Multiple VLM and image generation providers (OpenAI, Azure, Gemini, OpenRouter, KIE)
 - Input optimization layer for better generation quality
 - Auto-refine mode and run continuation with user feedback
-- CLI, Python API, and MCP server for IDE integration
+- CLI, Python API, HTTP API, and MCP server for IDE integration
 - Claude Code skills for `/generate-diagram`, `/generate-plot`, and `/evaluate-diagram`
 
 <p align="center">
@@ -140,8 +140,22 @@ PaperBanana supports multiple VLM and image generation providers:
 | VLM | Google Gemini | `gemini-2.0-flash` | Free tier |
 | Image Generation | Google Gemini | `gemini-3-pro-image-preview` | Free tier |
 | VLM / Image | OpenRouter | Any supported model | Flexible routing |
+| VLM | KIE | `gemini-2.5-flash` | OpenAI-compatible endpoint |
+| Image Generation | KIE | `google/nano-banana` | Async task API |
 
 Azure OpenAI / Foundry endpoints are auto-detected — set `OPENAI_BASE_URL` to your endpoint.
+
+## HTTP API
+
+PaperBanana now includes a FastAPI service that wraps all major capabilities:
+- Generate (`/api/v1/tasks/generate`)
+- Plot (`/api/v1/tasks/plot`)
+- Continue (`/api/v1/tasks/continue`)
+- Evaluate (`/api/v1/tasks/evaluate`)
+
+See:
+- [API usage docs](docs/API.md)
+- [Dokploy deployment guide](docs/DOKPLOY.md)
 
 ---
 
