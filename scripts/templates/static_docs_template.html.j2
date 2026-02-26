@@ -428,6 +428,26 @@
         <pre><code>{{ ep.request_example }}</code></pre>
         {% endif %}
 
+        {% if ep.request_parameters and ep.request_parameters|length > 0 %}
+        <span class="label">参数说明</span>
+        <table>
+          <thead>
+            <tr><th>参数</th><th>位置</th><th>类型</th><th>必填</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            {% for p in ep.request_parameters %}
+            <tr>
+              <td><code>{{ p.name }}</code></td>
+              <td>{{ p.in }}</td>
+              <td><code>{{ p.type }}</code></td>
+              <td>{{ "是" if p.required else "否" }}</td>
+              <td>{{ p.description }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+
         {% if ep.responses and ep.responses|length > 0 %}
         <span class="label">响应</span>
         <table>

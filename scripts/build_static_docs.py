@@ -70,6 +70,33 @@ _TAG_MAP = {
     "Health": "心跳检测",
 }
 
+_FIELD_DESC_MAP = {
+    "task_id": "任务 ID",
+    "source_context": "源文本上下文",
+    "communicative_intent": "图表标题 / 要传达内容",
+    "intent": "图表意图",
+    "raw_data": "统计图原始数据（JSON）",
+    "run_id": "已有运行 ID",
+    "continue_latest": "是否续跑最新 run",
+    "additional_iterations": "追加迭代次数",
+    "user_feedback": "用户反馈",
+    "refinement_iterations": "精化迭代次数",
+    "optimize_inputs": "是否启用输入优化",
+    "auto_refine": "是否自动迭代到满意",
+    "max_iterations": "最大迭代次数",
+    "output_format": "输出图片格式（png/jpeg/webp）",
+    "providers": "按任务覆盖供应商与模型配置",
+    "providers.vlm_provider": "覆盖 VLM 供应商",
+    "providers.vlm_model": "覆盖 VLM 模型",
+    "providers.image_provider": "覆盖图像供应商",
+    "providers.image_model": "覆盖图像模型",
+    "generated_image": "待评测生成图文件",
+    "reference_image": "参考图文件",
+    "caption": "图表标题",
+    "vlm_provider": "评测时覆盖 VLM 供应商",
+    "vlm_model": "评测时覆盖 VLM 模型",
+}
+
 
 def _plain_text(value: str | None) -> str:
     if not value:
@@ -109,6 +136,166 @@ def _extract_request_example(operation: dict[str, Any]) -> str | None:
     return None
 
 
+def _resolve_schema_ref(schema: dict[str, Any], components: dict[str, Any]) -> dict[str, Any]:
+    """Resolve #/components/schemas/* references."""
+    current = schema
+    while isinstance(current, dict) and "$ref" in current:
+        ref = str(current["$ref"])
+        if not ref.startswith("#/components/schemas/"):
+            break
+        name = ref.split("/")[-1]
+        target = components.get(name)
+        if not isinstance(target, dict):
+            break
+        current = target
+    return current
+
+
+def _unwrap_anyof(schema: dict[str, Any], components: dict[str, Any]) -> dict[str, Any]:
+    """Prefer the non-null branch from anyOf for docs rendering."""
+    current = _resolve_schema_ref(schema, components)
+    any_of = current.get("anyOf")
+    if not isinstance(any_of, list):
+        return current
+
+    non_null = []
+    nullable = False
+    for item in any_of:
+        if isinstance(item, dict) and item.get("type") == "null":
+            nullable = True
+        elif isinstance(item, dict):
+            non_null.append(item)
+
+    if len(non_null) == 1:
+        chosen = _resolve_schema_ref(non_null[0], components)
+        merged = dict(chosen)
+        if nullable:
+            merged["x-nullable"] = True
+        return merged
+    return current
+
+
+def _schema_type(schema: dict[str, Any], components: dict[str, Any]) -> str:
+    """Render a compact type label for schema."""
+    current = _unwrap_anyof(schema, components)
+    if current.get("contentMediaType") == "application/octet-stream":
+        return "file"
+    enum_vals = current.get("enum")
+    if isinstance(enum_vals, list) and enum_vals:
+        enum_joined = ", ".join(str(v) for v in enum_vals)
+        return f"enum({enum_joined})"
+    schema_type = current.get("type")
+    if schema_type == "array":
+        items = current.get("items")
+        if isinstance(items, dict):
+            return f"array[{_schema_type(items, components)}]"
+        return "array"
+    if schema_type:
+        return str(schema_type)
+    if current.get("properties"):
+        return "object"
+    return "any"
+
+
+def _localize_field_desc(field_name: str, raw_desc: str) -> str:
+    if field_name in _FIELD_DESC_MAP:
+        return _FIELD_DESC_MAP[field_name]
+    if "." in field_name:
+        leaf = field_name.split(".")[-1]
+        if leaf in _FIELD_DESC_MAP:
+            return _FIELD_DESC_MAP[leaf]
+    if raw_desc and raw_desc != "-":
+        return raw_desc
+    return "-"
+
+
+def _extract_body_fields_from_schema(
+    schema: dict[str, Any],
+    components: dict[str, Any],
+    prefix: str = "",
+) -> list[dict[str, Any]]:
+    """Extract request-body fields recursively from an object schema."""
+    current = _unwrap_anyof(schema, components)
+    props = current.get("properties")
+    if not isinstance(props, dict) or not props:
+        return []
+
+    required_fields = set(current.get("required", []))
+    rows: list[dict[str, Any]] = []
+    for prop_name, prop_schema_raw in props.items():
+        if not isinstance(prop_schema_raw, dict):
+            continue
+        field_name = f"{prefix}.{prop_name}" if prefix else prop_name
+        prop_schema = _unwrap_anyof(prop_schema_raw, components)
+        raw_desc = _plain_text(prop_schema.get("description")) or "-"
+        desc = _localize_field_desc(field_name, raw_desc)
+        rows.append(
+            {
+                "name": field_name,
+                "in": "body",
+                "type": _schema_type(prop_schema_raw, components),
+                "required": prop_name in required_fields,
+                "description": desc,
+            }
+        )
+        rows.extend(
+            _extract_body_fields_from_schema(
+                schema=prop_schema_raw,
+                components=components,
+                prefix=field_name,
+            )
+        )
+    return rows
+
+
+def _extract_request_parameters(
+    operation: dict[str, Any],
+    components: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Extract path/query/body parameter docs for one endpoint."""
+    rows: list[dict[str, Any]] = []
+
+    for param in operation.get("parameters", []):
+        if not isinstance(param, dict):
+            continue
+        name = str(param.get("name", "")).strip()
+        if not name:
+            continue
+        if name.lower() == "authorization":
+            continue
+        location = str(param.get("in", "")).strip() or "query"
+        schema = param.get("schema")
+        schema_obj = schema if isinstance(schema, dict) else {"type": "string"}
+        raw_desc = _plain_text(param.get("description")) or "-"
+        rows.append(
+            {
+                "name": name,
+                "in": location,
+                "type": _schema_type(schema_obj, components),
+                "required": bool(param.get("required", False)),
+                "description": _localize_field_desc(name, raw_desc),
+            }
+        )
+
+    request_body = operation.get("requestBody", {})
+    content = request_body.get("content", {})
+    for media_type in (
+        "application/json",
+        "multipart/form-data",
+        "application/x-www-form-urlencoded",
+    ):
+        media = content.get(media_type)
+        if not isinstance(media, dict):
+            continue
+        schema = media.get("schema")
+        if not isinstance(schema, dict):
+            continue
+        rows.extend(_extract_body_fields_from_schema(schema=schema, components=components))
+        break
+
+    return rows
+
+
 def _build_curl_example(
     method: str,
     path: str,
@@ -144,6 +331,7 @@ def _build_curl_example(
 
 
 def _collect_endpoints(openapi_schema: dict[str, Any]) -> list[dict[str, Any]]:
+    components = openapi_schema.get("components", {}).get("schemas", {})
     endpoints: list[dict[str, Any]] = []
     for path, methods in openapi_schema.get("paths", {}).items():
         for method, operation in methods.items():
@@ -157,6 +345,7 @@ def _collect_endpoints(openapi_schema: dict[str, Any]) -> list[dict[str, Any]]:
                 f"{path.strip('/').replace('/', '-').replace('{', '').replace('}', '')}"
             )
             request_example = _extract_request_example(operation)
+            request_parameters = _extract_request_parameters(operation, components)
             responses = []
             for code, resp in operation.get("responses", {}).items():
                 desc = _plain_text(resp.get("description")) or "-"
@@ -186,6 +375,7 @@ def _collect_endpoints(openapi_schema: dict[str, Any]) -> list[dict[str, Any]]:
                         operation.get("requestBody", {}).get("content", {}).keys()
                     ),
                     "request_example": request_example,
+                    "request_parameters": request_parameters,
                     "responses": responses,
                     "curl_example": _build_curl_example(
                         method_lower,

@@ -417,7 +417,7 @@
           </div>
           <div class="metric">
             <div class="k">生成时间</div>
-            <div class="v">2026-02-26 21:23:24</div>
+            <div class="v">2026-02-26 21:30:58</div>
           </div>
         </div>
         <p class="note">调用流程：提交任务 -> 轮询状态 -> 下载结果。任务均为异步执行。</p>
@@ -444,6 +444,8 @@
           <span class="tag">心跳检测</span>
           
         </div>
+        
+
         
 
         
@@ -499,6 +501,114 @@
   "refinement_iterations": 3,
   "optimize_inputs": true
 }</code></pre>
+        
+
+        
+        <span class="label">参数说明</span>
+        <table>
+          <thead>
+            <tr><th>参数</th><th>位置</th><th>类型</th><th>必填</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            
+            <tr>
+              <td><code>source_context</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>是</td>
+              <td>源文本上下文</td>
+            </tr>
+            
+            <tr>
+              <td><code>communicative_intent</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>是</td>
+              <td>图表标题 / 要传达内容</td>
+            </tr>
+            
+            <tr>
+              <td><code>refinement_iterations</code></td>
+              <td>body</td>
+              <td><code>integer</code></td>
+              <td>否</td>
+              <td>精化迭代次数</td>
+            </tr>
+            
+            <tr>
+              <td><code>optimize_inputs</code></td>
+              <td>body</td>
+              <td><code>boolean</code></td>
+              <td>否</td>
+              <td>是否启用输入优化</td>
+            </tr>
+            
+            <tr>
+              <td><code>auto_refine</code></td>
+              <td>body</td>
+              <td><code>boolean</code></td>
+              <td>否</td>
+              <td>是否自动迭代到满意</td>
+            </tr>
+            
+            <tr>
+              <td><code>max_iterations</code></td>
+              <td>body</td>
+              <td><code>integer</code></td>
+              <td>否</td>
+              <td>最大迭代次数</td>
+            </tr>
+            
+            <tr>
+              <td><code>output_format</code></td>
+              <td>body</td>
+              <td><code>enum(png, jpeg, webp)</code></td>
+              <td>否</td>
+              <td>输出图片格式（png/jpeg/webp）</td>
+            </tr>
+            
+            <tr>
+              <td><code>providers</code></td>
+              <td>body</td>
+              <td><code>object</code></td>
+              <td>否</td>
+              <td>按任务覆盖供应商与模型配置</td>
+            </tr>
+            
+            <tr>
+              <td><code>providers.vlm_provider</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>覆盖 VLM 供应商</td>
+            </tr>
+            
+            <tr>
+              <td><code>providers.vlm_model</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>覆盖 VLM 模型</td>
+            </tr>
+            
+            <tr>
+              <td><code>providers.image_provider</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>覆盖图像供应商</td>
+            </tr>
+            
+            <tr>
+              <td><code>providers.image_model</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>覆盖图像模型</td>
+            </tr>
+            
+          </tbody>
+        </table>
         
 
         
@@ -577,6 +687,98 @@
         
 
         
+        <span class="label">参数说明</span>
+        <table>
+          <thead>
+            <tr><th>参数</th><th>位置</th><th>类型</th><th>必填</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            
+            <tr>
+              <td><code>intent</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>是</td>
+              <td>图表意图</td>
+            </tr>
+            
+            <tr>
+              <td><code>raw_data</code></td>
+              <td>body</td>
+              <td><code>any</code></td>
+              <td>是</td>
+              <td>统计图原始数据（JSON）</td>
+            </tr>
+            
+            <tr>
+              <td><code>source_context</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>源文本上下文</td>
+            </tr>
+            
+            <tr>
+              <td><code>refinement_iterations</code></td>
+              <td>body</td>
+              <td><code>integer</code></td>
+              <td>否</td>
+              <td>精化迭代次数</td>
+            </tr>
+            
+            <tr>
+              <td><code>output_format</code></td>
+              <td>body</td>
+              <td><code>enum(png, jpeg, webp)</code></td>
+              <td>否</td>
+              <td>输出图片格式（png/jpeg/webp）</td>
+            </tr>
+            
+            <tr>
+              <td><code>providers</code></td>
+              <td>body</td>
+              <td><code>object</code></td>
+              <td>否</td>
+              <td>按任务覆盖供应商与模型配置</td>
+            </tr>
+            
+            <tr>
+              <td><code>providers.vlm_provider</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>覆盖 VLM 供应商</td>
+            </tr>
+            
+            <tr>
+              <td><code>providers.vlm_model</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>覆盖 VLM 模型</td>
+            </tr>
+            
+            <tr>
+              <td><code>providers.image_provider</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>覆盖图像供应商</td>
+            </tr>
+            
+            <tr>
+              <td><code>providers.image_model</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>覆盖图像模型</td>
+            </tr>
+            
+          </tbody>
+        </table>
+        
+
+        
         <span class="label">响应</span>
         <table>
           <thead>
@@ -651,6 +853,114 @@
         
 
         
+        <span class="label">参数说明</span>
+        <table>
+          <thead>
+            <tr><th>参数</th><th>位置</th><th>类型</th><th>必填</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            
+            <tr>
+              <td><code>run_id</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>已有运行 ID</td>
+            </tr>
+            
+            <tr>
+              <td><code>continue_latest</code></td>
+              <td>body</td>
+              <td><code>boolean</code></td>
+              <td>否</td>
+              <td>是否续跑最新 run</td>
+            </tr>
+            
+            <tr>
+              <td><code>additional_iterations</code></td>
+              <td>body</td>
+              <td><code>integer</code></td>
+              <td>否</td>
+              <td>追加迭代次数</td>
+            </tr>
+            
+            <tr>
+              <td><code>user_feedback</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>用户反馈</td>
+            </tr>
+            
+            <tr>
+              <td><code>auto_refine</code></td>
+              <td>body</td>
+              <td><code>boolean</code></td>
+              <td>否</td>
+              <td>是否自动迭代到满意</td>
+            </tr>
+            
+            <tr>
+              <td><code>max_iterations</code></td>
+              <td>body</td>
+              <td><code>integer</code></td>
+              <td>否</td>
+              <td>最大迭代次数</td>
+            </tr>
+            
+            <tr>
+              <td><code>output_format</code></td>
+              <td>body</td>
+              <td><code>enum(png, jpeg, webp)</code></td>
+              <td>否</td>
+              <td>输出图片格式（png/jpeg/webp）</td>
+            </tr>
+            
+            <tr>
+              <td><code>providers</code></td>
+              <td>body</td>
+              <td><code>object</code></td>
+              <td>否</td>
+              <td>按任务覆盖供应商与模型配置</td>
+            </tr>
+            
+            <tr>
+              <td><code>providers.vlm_provider</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>覆盖 VLM 供应商</td>
+            </tr>
+            
+            <tr>
+              <td><code>providers.vlm_model</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>覆盖 VLM 模型</td>
+            </tr>
+            
+            <tr>
+              <td><code>providers.image_provider</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>覆盖图像供应商</td>
+            </tr>
+            
+            <tr>
+              <td><code>providers.image_model</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>覆盖图像模型</td>
+            </tr>
+            
+          </tbody>
+        </table>
+        
+
+        
         <span class="label">响应</span>
         <table>
           <thead>
@@ -702,6 +1012,66 @@
         
 
         
+        <span class="label">参数说明</span>
+        <table>
+          <thead>
+            <tr><th>参数</th><th>位置</th><th>类型</th><th>必填</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            
+            <tr>
+              <td><code>generated_image</code></td>
+              <td>body</td>
+              <td><code>file</code></td>
+              <td>是</td>
+              <td>待评测生成图文件</td>
+            </tr>
+            
+            <tr>
+              <td><code>reference_image</code></td>
+              <td>body</td>
+              <td><code>file</code></td>
+              <td>是</td>
+              <td>参考图文件</td>
+            </tr>
+            
+            <tr>
+              <td><code>source_context</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>是</td>
+              <td>源文本上下文</td>
+            </tr>
+            
+            <tr>
+              <td><code>caption</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>是</td>
+              <td>图表标题</td>
+            </tr>
+            
+            <tr>
+              <td><code>vlm_provider</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>评测时覆盖 VLM 供应商</td>
+            </tr>
+            
+            <tr>
+              <td><code>vlm_model</code></td>
+              <td>body</td>
+              <td><code>string</code></td>
+              <td>否</td>
+              <td>评测时覆盖 VLM 模型</td>
+            </tr>
+            
+          </tbody>
+        </table>
+        
+
+        
         <span class="label">响应</span>
         <table>
           <thead>
@@ -748,6 +1118,26 @@
         
 
         
+        <span class="label">参数说明</span>
+        <table>
+          <thead>
+            <tr><th>参数</th><th>位置</th><th>类型</th><th>必填</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            
+            <tr>
+              <td><code>task_id</code></td>
+              <td>path</td>
+              <td><code>string</code></td>
+              <td>是</td>
+              <td>任务 ID</td>
+            </tr>
+            
+          </tbody>
+        </table>
+        
+
+        
         <span class="label">响应</span>
         <table>
           <thead>
@@ -787,6 +1177,26 @@
 
         
 
+        
+
+        
+        <span class="label">参数说明</span>
+        <table>
+          <thead>
+            <tr><th>参数</th><th>位置</th><th>类型</th><th>必填</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            
+            <tr>
+              <td><code>task_id</code></td>
+              <td>path</td>
+              <td><code>string</code></td>
+              <td>是</td>
+              <td>任务 ID</td>
+            </tr>
+            
+          </tbody>
+        </table>
         
 
         
