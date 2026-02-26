@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import structlog
@@ -35,7 +36,7 @@ class PlannerAgent(BaseAgent):
         caption: str,
         examples: list[ReferenceExample],
         diagram_type: DiagramType = DiagramType.METHODOLOGY,
-    ) -> str:
+    ) -> tuple[str, str | None]:
         """Generate a detailed textual description of the target diagram.
 
         Args:
@@ -45,7 +46,8 @@ class PlannerAgent(BaseAgent):
             diagram_type: Type of diagram being generated.
 
         Returns:
-            Detailed textual description for the Visualizer.
+            Tuple of (description, recommended_ratio).
+            recommended_ratio is a string like '16:9' or None if not provided.
         """
         # Format examples for in-context learning
         examples_text = self._format_examples(examples)
@@ -69,15 +71,20 @@ class PlannerAgent(BaseAgent):
             context_length=len(source_context),
         )
 
-        description = await self.vlm.generate(
+        raw_output = await self.vlm.generate(
             prompt=prompt,
             images=example_images if example_images else None,
             temperature=0.7,
             max_tokens=4096,
         )
 
-        logger.info("Planner generated description", length=len(description))
-        return description
+        description, ratio = self._parse_ratio(raw_output)
+        logger.info(
+            "Planner generated description",
+            length=len(description),
+            recommended_ratio=ratio,
+        )
+        return description, ratio
 
     def _format_examples(self, examples: list[ReferenceExample]) -> str:
         """Format reference examples for the planner prompt.
@@ -97,10 +104,15 @@ class PlannerAgent(BaseAgent):
                 img_index += 1
                 image_ref = f"\n**Diagram**: [See reference image {img_index} above]"
 
+            ratio_info = ""
+            if ex.aspect_ratio:
+                ratio_info = f"\n**Aspect Ratio**: {ex.aspect_ratio:.2f}"
+
             lines.append(
                 f"### Example {i}\n"
                 f"**Caption**: {ex.caption}\n"
                 f"**Source Context**: {ex.source_context[:500]}"
+                f"{ratio_info}"
                 f"{image_ref}\n"
             )
         return "\n".join(lines)
@@ -130,3 +142,24 @@ class PlannerAgent(BaseAgent):
                     error=str(e),
                 )
         return images
+
+    _VALID_RATIOS = {"1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "21:9"}
+
+    @classmethod
+    def _parse_ratio(cls, text: str) -> tuple[str, str | None]:
+        """Extract RECOMMENDED_RATIO from planner output and return clean description."""
+        match = re.search(r"RECOMMENDED_RATIO:\s*([\d:]+)", text)
+        if match:
+            ratio = match.group(1).strip()
+            if ratio in cls._VALID_RATIOS:
+                # Remove the ratio line (and surrounding markdown fences) from description
+                clean = re.sub(
+                    r"\n*```\n*RECOMMENDED_RATIO:.*?\n*```\n*",
+                    "",
+                    text,
+                ).strip()
+                # Also handle case without fences
+                clean = re.sub(r"\n*RECOMMENDED_RATIO:.*", "", clean).strip()
+                return clean, ratio
+            logger.warning("Planner returned invalid ratio", ratio=ratio)
+        return text.strip(), None

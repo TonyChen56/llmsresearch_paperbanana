@@ -257,7 +257,7 @@ class PaperBananaPipeline:
         # Step 2: Planner — generate textual description
         logger.info("Phase 1: Planning")
         planning_start = time.perf_counter()
-        description = await self.planner.run(
+        description, planner_ratio = await self.planner.run(
             source_context=input.source_context,
             caption=input.communicative_intent,
             examples=examples,
@@ -267,6 +267,7 @@ class PaperBananaPipeline:
         logger.info(
             "[Planner] done",
             seconds=round(planning_seconds, 1),
+            recommended_ratio=planner_ratio,
         )
 
         # Step 3: Stylist — optimize description aesthetics
@@ -292,11 +293,21 @@ class PaperBananaPipeline:
                     "retrieved_examples": [e.id for e in examples],
                     "initial_description": description,
                     "optimized_description": optimized_description,
+                    "planner_recommended_ratio": planner_ratio,
                 },
                 self._run_dir / "planning.json",
             )
 
         # ── Phase 2: Iterative Refinement ─────────────────────────────
+
+        # Aspect ratio priority: user-specified > planner-recommended > default (None)
+        effective_ratio = input.aspect_ratio or planner_ratio
+        if effective_ratio:
+            logger.info(
+                "Using aspect ratio",
+                source="user" if input.aspect_ratio else "planner",
+                ratio=effective_ratio,
+            )
 
         current_description = optimized_description
         iterations: list[IterationRecord] = []
@@ -320,7 +331,7 @@ class PaperBananaPipeline:
                 diagram_type=input.diagram_type,
                 raw_data=input.raw_data,
                 iteration=i + 1,
-                aspect_ratio=input.aspect_ratio,
+                aspect_ratio=effective_ratio,
             )
             visualizer_seconds = time.perf_counter() - visualizer_start
             logger.info(

@@ -42,6 +42,7 @@ class ReferenceExample(BaseModel):
     caption: str
     image_path: str
     category: Optional[str] = None
+    aspect_ratio: Optional[float] = None
 
 
 class CritiqueResult(BaseModel):
