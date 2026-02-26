@@ -14,9 +14,9 @@ from api.app import app
 
 _ENDPOINT_META: dict[tuple[str, str], dict[str, str]] = {
     ("get", "/health"): {
-        "nav_label": "健康检查",
-        "title": "健康检查",
-        "description": "检查 API 服务是否正常运行。",
+        "nav_label": "心跳检测",
+        "title": "心跳检测",
+        "description": "用于检测服务是否存活。",
     },
     ("post", "/api/v1/tasks/generate"): {
         "nav_label": "提交生成任务",
@@ -67,7 +67,7 @@ _RESPONSE_DESC_MAP = {
 
 _TAG_MAP = {
     "Tasks": "任务接口",
-    "Health": "健康检查",
+    "Health": "心跳检测",
 }
 
 

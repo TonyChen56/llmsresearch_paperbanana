@@ -33,7 +33,7 @@ SKIP_SSL_VERIFICATION=false
 - `GOOGLE_API_KEY`
 - `OPENROUTER_API_KEY`
 
-## 3. 健康检查
+## 3. 心跳检测
 
 - Path: `/health`
 - Expected: HTTP 200 + `{"status":"ok"...}`
@@ -49,4 +49,3 @@ SKIP_SSL_VERIFICATION=false
 1. 任务状态保存在内存中，建议 `uvicorn --workers 1`（Dockerfile 已固定）。
 2. 生成文件保存在容器 `outputs/` 目录，建议在 Dokploy 挂载持久卷。
 3. `api/static/docs.html` 在镜像构建阶段自动由 OpenAPI 生成。
-

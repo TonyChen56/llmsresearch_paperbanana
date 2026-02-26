@@ -121,9 +121,14 @@ async def root() -> RedirectResponse:
     return RedirectResponse(url="/static/docs.html")
 
 
-@app.get("/health", tags=["Health"])
-async def health_check():
-    """Health endpoint for liveness checks."""
+@app.get(
+    "/health",
+    tags=["Health"],
+    summary="心跳检测",
+    description="用于服务存活探测的心跳接口。",
+)
+async def heartbeat_check():
+    """Heartbeat endpoint for liveness checks."""
     return {"status": "ok", "version": "0.1.2"}
 
 

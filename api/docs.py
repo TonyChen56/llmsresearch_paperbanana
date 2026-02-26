@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 tags_metadata = [
-    {"name": "Health", "description": "服务健康检查与文档入口"},
+    {"name": "Health", "description": "服务心跳检测与文档入口"},
     {"name": "Tasks", "description": "异步任务提交、查询与结果下载"},
 ]
 
@@ -47,4 +47,3 @@ request_examples = {
         },
     },
 }
-

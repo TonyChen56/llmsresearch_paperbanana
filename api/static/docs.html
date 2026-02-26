@@ -366,7 +366,7 @@
           
           <a class="nav-item" href="#get-health">
             <span class="method get">GET</span>
-            <span>健康检查</span>
+            <span>心跳检测</span>
           </a>
           
           <a class="nav-item" href="#post-api-v1-tasks-generate">
@@ -417,7 +417,7 @@
           </div>
           <div class="metric">
             <div class="k">生成时间</div>
-            <div class="v">2026-02-26 21:15:49</div>
+            <div class="v">2026-02-26 21:23:24</div>
           </div>
         </div>
         <p class="note">调用流程：提交任务 -> 轮询状态 -> 下载结果。任务均为异步执行。</p>
@@ -425,7 +425,7 @@
 
       <section id="authentication" class="card">
         <h3>鉴权</h3>
-        <p>除健康检查与文档接口外，业务接口都需要 Bearer Token。</p>
+        <p>除心跳检测与文档接口外，业务接口都需要 Bearer Token。</p>
         <div class="auth-box"><code>Authorization: Bearer &lt;PAPERBANANA_API_TOKEN&gt;</code></div>
       </section>
 
@@ -433,15 +433,15 @@
       <section id="get-health" class="card">
         <div class="endpoint-head">
           <span class="method get">GET</span>
-          <span class="endpoint-title">健康检查</span>
+          <span class="endpoint-title">心跳检测</span>
           
         </div>
         <p class="endpoint-path"><span class="path">/health</span></p>
-        <p class="meta">检查 API 服务是否正常运行。</p>
+        <p class="meta">用于检测服务是否存活。</p>
         
         <div>
           
-          <span class="tag">健康检查</span>
+          <span class="tag">心跳检测</span>
           
         </div>
         
