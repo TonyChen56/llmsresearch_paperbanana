@@ -51,6 +51,7 @@ class ResumeState(BaseModel):
     last_description: str
     last_iteration: int
     last_image_path: Optional[str] = None
+    aspect_ratio: Optional[str] = None
 
 
 def load_resume_state(output_dir: str, run_id: str) -> ResumeState:
@@ -126,6 +127,16 @@ def load_resume_state(output_dir: str, run_id: str) -> ResumeState:
         description_len=len(last_description),
     )
 
+    # Aspect ratio priority: user-specified > planner-recommended
+    user_ratio = run_input.get("aspect_ratio")
+    planner_ratio = None
+    planning_path = run_dir / "planning.json"
+    if planning_path.exists():
+        with open(planning_path) as f:
+            planning = json.load(f)
+        planner_ratio = planning.get("planner_recommended_ratio")
+    aspect_ratio = user_ratio or planner_ratio
+
     return ResumeState(
         run_dir=str(run_dir),
         run_id=run_id,
@@ -136,4 +147,5 @@ def load_resume_state(output_dir: str, run_id: str) -> ResumeState:
         last_description=last_description,
         last_iteration=last_iteration,
         last_image_path=last_image_path,
+        aspect_ratio=aspect_ratio,
     )

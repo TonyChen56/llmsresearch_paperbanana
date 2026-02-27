@@ -338,9 +338,12 @@ def generate(
             console.print("  [dim]●[/dim] Planning description...", end="")
             t = time.perf_counter()
             result = await orig_planner_run(*a, **kw)
-            console.print(
-                f" [green]✓[/green] [dim]{time.perf_counter() - t:.1f}s ({len(result)} chars)[/dim]"
-            )
+            desc, ratio = result
+            info = f"{len(desc)} chars"
+            if ratio:
+                info += f", ratio={ratio}"
+            elapsed = time.perf_counter() - t
+            console.print(f" [green]\u2713[/green] [dim]{elapsed:.1f}s ({info})[/dim]")
             return result
 
         async def _stylist_run(*a, **kw):

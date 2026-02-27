@@ -181,6 +181,7 @@ class PaperBananaPipeline:
                     "communicative_intent": input.communicative_intent,
                     "diagram_type": input.diagram_type.value,
                     "raw_data": input.raw_data,
+                    "aspect_ratio": input.aspect_ratio,
                 },
                 self._run_dir / "run_input.json",
             )
@@ -523,7 +524,7 @@ class PaperBananaPipeline:
                 diagram_type=resume_state.diagram_type,
                 raw_data=resume_state.raw_data,
                 iteration=iter_num,
-                aspect_ratio=getattr(resume_state, 'aspect_ratio', None),
+                aspect_ratio=resume_state.aspect_ratio,
             )
             visualizer_seconds = time.perf_counter() - visualizer_start
             logger.info(
