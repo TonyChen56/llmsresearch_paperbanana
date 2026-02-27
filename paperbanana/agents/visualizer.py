@@ -154,6 +154,11 @@ class VisualizerAgent(BaseAgent):
         current_code = self._extract_code(code_response)
         max_attempts = 3
         last_error: Optional[str] = None
+        # Save generated code for inspection / manual editing
+        code_path = Path(output_path).with_suffix(".py")
+        code_path.parent.mkdir(parents=True, exist_ok=True)
+        code_path.write_text(current_code)
+        logger.info("Plot code saved", path=str(code_path))
 
         for attempt in range(1, max_attempts + 1):
             success, error_message = self._execute_plot_code(
@@ -185,6 +190,8 @@ class VisualizerAgent(BaseAgent):
                 max_tokens=4096,
             )
             current_code = self._extract_code(repair_response)
+            code_path.write_text(current_code)
+            logger.info("Plot code updated", path=str(code_path), attempt=attempt + 1)
 
         raise RuntimeError(
             f"Plot code execution failed after {max_attempts} attempts: {last_error or 'Unknown error'}"
