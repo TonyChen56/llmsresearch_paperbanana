@@ -232,6 +232,7 @@ class PaperBananaPipeline:
                 communicative_intent=optimized["optimized_caption"],
                 diagram_type=input.diagram_type,
                 raw_data=input.raw_data,
+                aspect_ratio=input.aspect_ratio,
             )
 
         # ── Phase 1: Linear Planning ─────────────────────────────────

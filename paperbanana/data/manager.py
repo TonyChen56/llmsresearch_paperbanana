@@ -348,7 +348,7 @@ def resolve_reference_path(
     """Resolve reference set path with fallback chain.
 
     Priority:
-    1. REFERENCE_SET_PATH env var (explicit override) — if set and differs from default
+    1. Explicit settings path (non-default, from config/env/YAML)
     2. Cached expanded dataset (~/.cache/paperbanana/reference_sets/)
     3. Built-in reference set (data/reference_sets/)
 
@@ -361,10 +361,11 @@ def resolve_reference_path(
     """
     default_path = "data/reference_sets"
 
-    # If user explicitly set REFERENCE_SET_PATH to something non-default, respect it
-    env_path = os.environ.get("REFERENCE_SET_PATH")
-    if env_path and env_path != default_path:
-        return env_path
+    # If settings_path differs from the default, the user explicitly configured it
+    # (via env var REFERENCE_SET_PATH, YAML config, or CLI). Honor it unconditionally.
+    if settings_path != default_path:
+        logger.info("Using explicitly configured reference set", path=settings_path)
+        return settings_path
 
     # Check if expanded dataset is cached
     manager = DatasetManager(cache_dir=cache_dir)
