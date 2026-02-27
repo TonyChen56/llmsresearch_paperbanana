@@ -73,6 +73,9 @@ class Settings(BaseSettings):
     reference_set_path: str = "data/reference_sets"
     guidelines_path: str = "data/guidelines"
 
+    # Cache settings
+    cache_dir: Optional[str] = Field(default=None, alias="PAPERBANANA_CACHE_DIR")
+
     # Output settings
     output_dir: str = "outputs"
     output_format: OutputFormat = "png"

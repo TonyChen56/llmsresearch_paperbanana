@@ -24,6 +24,14 @@ app = typer.Typer(
 )
 console = Console()
 
+# ── Data subcommand group ─────────────────────────────────────────
+data_app = typer.Typer(
+    name="data",
+    help="Manage reference datasets (download, info, clear).",
+    no_args_is_help=True,
+)
+app.add_typer(data_app, name="data")
+
 
 @app.command()
 def generate(
@@ -79,6 +87,11 @@ def generate(
         "--dry-run",
         help="Validate inputs and show what would happen without making API calls",
     ),
+    auto_download_data: bool = typer.Option(
+        False,
+        "--auto-download-data",
+        help="Auto-download expanded reference set (~257MB) on first run if not cached",
+    ),
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Show detailed agent progress and timing"
     ),
@@ -125,6 +138,21 @@ def generate(
         settings = Settings(**overrides)
 
     from paperbanana.core.pipeline import PaperBananaPipeline
+
+    # ── Auto-download expanded reference set if requested ──────────────
+    if auto_download_data:
+        from paperbanana.data.manager import DatasetManager
+
+        dm = DatasetManager(cache_dir=settings.cache_dir)
+        if not dm.is_downloaded():
+            console.print()
+            console.print("  [dim]●[/dim] Downloading expanded reference set (~257MB)...", end="")
+            try:
+                count = dm.download()
+                console.print(f" [green]✓[/green] [dim]{count} examples cached[/dim]")
+            except Exception as e:
+                console.print(f" [red]✗[/red] Download failed: {e}")
+                console.print("    [dim]Falling back to built-in reference set (13 examples)[/dim]")
 
     # ── Continue-run mode ─────────────────────────────────────────
     if continue_run is not None or continue_last:
@@ -273,6 +301,14 @@ def generate(
     async def _run_with_progress():
         pipeline = PaperBananaPipeline(settings=settings)
 
+        # Hint: show if using small built-in reference set
+        ref_count = pipeline.reference_store.count
+        if ref_count <= 20 and not auto_download_data:
+            console.print(
+                "  [dim]Using built-in reference set"
+                f" ({ref_count} examples). For better results:[/dim]"
+            )
+            console.print("  [dim]  paperbanana data download   # or --auto-download-data[/dim]")
         # Patch agents to print step-by-step progress with timing
         orig_optimizer_run = pipeline.optimizer.run
         orig_retriever_run = pipeline.retriever.run
@@ -559,6 +595,91 @@ def evaluate(
         result = getattr(scores, dim)
         if result.reasoning:
             console.print(f"\n[bold]{dim}[/bold]: {result.reasoning}")
+
+
+# ── Data subcommands ──────────────────────────────────────────────
+
+
+@data_app.command()
+def download(
+    task: str = typer.Option(
+        "diagram",
+        "--task",
+        help="Which references to import: diagram, plot, or both",
+    ),
+    force: bool = typer.Option(False, "--force", help="Re-download even if already cached"),
+):
+    """Download the expanded reference set from official PaperBananaBench (~257MB)."""
+    from paperbanana.data.manager import DatasetManager
+
+    dm = DatasetManager()
+    if dm.is_downloaded() and not force:
+        info = dm.get_info() or {}
+        console.print(
+            Panel.fit(
+                f"[bold]Reference Set — Already Cached[/bold]\n\n"
+                f"Location: {dm.reference_dir}\n"
+                f"Examples: {dm.get_example_count()}\n"
+                f"Version: {info.get('version', 'unknown')}\n"
+                f"Revision: {info.get('revision', 'unknown')}",
+                border_style="green",
+            )
+        )
+        console.print("\nUse [bold]--force[/bold] to re-download.")
+        return
+
+    console.print("[bold]PaperBanana[/bold] — Downloading Reference Set\n")
+    try:
+        count = dm.download(
+            task=task,
+            force=force,
+            progress_callback=lambda msg: console.print(f"  [dim]●[/dim] {msg}"),
+        )
+        console.print(f"\n[green]Done![/green] {count} reference examples cached to:")
+        console.print(f"  [bold]{dm.reference_dir}[/bold]")
+    except Exception as e:
+        console.print(f"\n[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+
+
+@data_app.command()
+def info():
+    """Show information about the cached reference dataset."""
+    from paperbanana.data.manager import DatasetManager
+
+    dm = DatasetManager()
+    dataset_info = dm.get_info()
+
+    if not dataset_info:
+        console.print("No expanded reference set cached.")
+        console.print("\nDownload with: [bold]paperbanana data download[/bold]")
+        return
+
+    console.print(
+        Panel.fit(
+            f"[bold]Cached Reference Set[/bold]\n\n"
+            f"Location: {dm.reference_dir}\n"
+            f"Examples: {dataset_info.get('example_count', '?')}\n"
+            f"Version: {dataset_info.get('version', 'unknown')}\n"
+            f"Revision: {dataset_info.get('revision', 'unknown')}\n"
+            f"Source: {dataset_info.get('source', 'unknown')}",
+            border_style="blue",
+        )
+    )
+
+
+@data_app.command()
+def clear():
+    """Remove cached reference dataset."""
+    from paperbanana.data.manager import DatasetManager
+
+    dm = DatasetManager()
+    if not dm.is_downloaded():
+        console.print("No cached dataset to clear.")
+        return
+
+    dm.clear()
+    console.print("[green]Cached reference set cleared.[/green]")
 
 
 if __name__ == "__main__":

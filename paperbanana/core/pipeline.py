@@ -122,8 +122,8 @@ class PaperBananaPipeline:
             self._image_gen = ProviderRegistry.create_image_gen(self.settings)
             self._demo_mode = False
 
-        # Load reference store
-        self.reference_store = ReferenceStore(self.settings.reference_set_path)
+        # Load reference store (resolves cache → built-in fallback)
+        self.reference_store = ReferenceStore.from_settings(self.settings)
 
         # Load guidelines
         guidelines_path = self.settings.guidelines_path

@@ -114,3 +114,26 @@ class ReferenceStore:
         store._examples = examples
         store._loaded = True
         return store
+
+    @classmethod
+    def from_settings(cls, settings) -> ReferenceStore:
+        """Create a ReferenceStore with automatic path resolution.
+
+        Resolution priority:
+        1. REFERENCE_SET_PATH env var (explicit override)
+        2. Cached expanded dataset (~/.cache/paperbanana/reference_sets/)
+        3. Built-in reference set (data/reference_sets/)
+
+        Args:
+            settings: Settings instance with reference_set_path and cache_dir.
+
+        Returns:
+            ReferenceStore with the best available reference set.
+        """
+        from paperbanana.data.manager import resolve_reference_path
+
+        resolved = resolve_reference_path(
+            settings_path=settings.reference_set_path,
+            cache_dir=settings.cache_dir,
+        )
+        return cls(resolved)
