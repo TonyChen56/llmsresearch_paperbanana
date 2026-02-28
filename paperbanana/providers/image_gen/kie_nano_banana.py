@@ -59,6 +59,32 @@ class KieNanoBananaImageGen(ImageGenProvider):
     def is_available(self) -> bool:
         return self._api_key is not None
 
+    @property
+    def supported_ratios(self) -> list[str]:
+        # KIE Nano Banana uses image_size enums similar to mainstream T2I providers.
+        return ["1:1", "2:3", "3:2", "9:16", "16:9"]
+
+    def _normalize_ratio(self, aspect_ratio: str) -> str:
+        """Map non-native ratios to the closest KIE-supported ratio."""
+        if aspect_ratio in self.supported_ratios:
+            return aspect_ratio
+        fallback = {
+            "3:4": "2:3",
+            "4:3": "3:2",
+            "21:9": "16:9",
+        }
+        return fallback.get(aspect_ratio, "16:9")
+
+    def _aspect_ratio_hint_from_ratio(self, ratio: str) -> str:
+        mapping = {
+            "16:9": "wide landscape format (16:9)",
+            "3:2": "landscape format (3:2)",
+            "9:16": "tall portrait format (9:16)",
+            "2:3": "portrait format (2:3)",
+            "1:1": "square format (1:1)",
+        }
+        return mapping.get(ratio, f"{ratio} format")
+
     def _aspect_ratio_hint(self, width: int, height: int) -> str:
         ratio = width / height
         if ratio > 1.5:
@@ -91,10 +117,16 @@ class KieNanoBananaImageGen(ImageGenProvider):
         width: int = 1024,
         height: int = 1024,
         seed: Optional[int] = None,
+        aspect_ratio: Optional[str] = None,
     ) -> Image.Image:
         client = self._get_client()
 
-        aspect_hint = self._aspect_ratio_hint(width, height)
+        effective_ratio = (
+            self._normalize_ratio(aspect_ratio)
+            if aspect_ratio
+            else self._kie_image_size(width, height)
+        )
+        aspect_hint = self._aspect_ratio_hint_from_ratio(effective_ratio)
         full_prompt = f"{prompt}\n\nGenerate this as a {aspect_hint} image."
         if negative_prompt:
             full_prompt += f"\n\nAvoid: {negative_prompt}"
@@ -104,7 +136,7 @@ class KieNanoBananaImageGen(ImageGenProvider):
             "input": {
                 "prompt": full_prompt[:5000],
                 "output_format": "png",
-                "image_size": self._kie_image_size(width, height),
+                "image_size": effective_ratio,
             },
         }
         if seed is not None:
