@@ -82,13 +82,17 @@ _FIELD_DESC_MAP = {
     "user_feedback": "用户反馈",
     "refinement_iterations": "精化迭代次数",
     "optimize_inputs": "是否启用输入优化",
+    "aspect_ratio": "目标长宽比（1:1/2:3/3:2/3:4/4:3/9:16/16:9/21:9）",
     "auto_refine": "是否自动迭代到满意",
     "max_iterations": "最大迭代次数",
     "output_format": "输出图片格式（png/jpeg/webp）",
     "providers": "按任务覆盖供应商与模型配置",
     "providers.vlm_provider": "覆盖 VLM 供应商（gemini/openrouter/openai/kie）",
     "providers.vlm_model": "覆盖 VLM 模型",
-    "providers.image_provider": "覆盖图像供应商（google_imagen/openrouter_imagen/openai_imagen/kie_nano_banana/kie）",
+    "providers.image_provider": (
+        "覆盖图像供应商（google_imagen/openrouter_imagen/openai_imagen/"
+        "kie_nano_banana/kie）"
+    ),
     "providers.image_model": "覆盖图像模型",
     "generated_image": "待评测生成图文件",
     "reference_image": "参考图文件",

@@ -14,6 +14,7 @@ ALLOWED_VLM_PROVIDERS = frozenset({"gemini", "openrouter", "openai", "kie"})
 ALLOWED_IMAGE_PROVIDERS = frozenset(
     {"google_imagen", "openrouter_imagen", "openai_imagen", "kie_nano_banana", "kie"}
 )
+ALLOWED_ASPECT_RATIOS = frozenset({"1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "21:9"})
 
 
 def _normalize_optional(value: Optional[str]) -> Optional[str]:
@@ -35,6 +36,16 @@ def _normalize_and_validate_provider(
     if normalized not in allowed:
         allowed_text = ", ".join(sorted(allowed))
         raise ValueError(f"{field_name} must be one of: {allowed_text}")
+    return normalized
+
+
+def _normalize_and_validate_aspect_ratio(value: Optional[str]) -> Optional[str]:
+    normalized = _normalize_optional(value)
+    if normalized is None:
+        return None
+    if normalized not in ALLOWED_ASPECT_RATIOS:
+        allowed_text = ", ".join(sorted(ALLOWED_ASPECT_RATIOS))
+        raise ValueError(f"aspect_ratio must be one of: {allowed_text}")
     return normalized
 
 
@@ -100,8 +111,14 @@ class GenerateTaskRequest(BaseModel):
     optimize_inputs: bool = Field(default=False, description="是否启用输入优化")
     auto_refine: bool = Field(default=False, description="是否自动迭代到满意")
     max_iterations: Optional[int] = Field(default=None, ge=1, le=100)
+    aspect_ratio: Optional[str] = Field(default=None, description="目标长宽比")
     output_format: Optional[OutputFormat] = None
     providers: Optional[ProviderOverrides] = None
+
+    @field_validator("aspect_ratio", mode="before")
+    @classmethod
+    def validate_aspect_ratio(cls, value: Optional[str]) -> Optional[str]:
+        return _normalize_and_validate_aspect_ratio(value)
 
 
 class PlotTaskRequest(BaseModel):
@@ -114,8 +131,14 @@ class PlotTaskRequest(BaseModel):
         description="可选：自定义上下文；为空时将从 raw_data 自动构造",
     )
     refinement_iterations: Optional[int] = Field(default=None, ge=1, le=30)
+    aspect_ratio: Optional[str] = Field(default=None, description="目标长宽比")
     output_format: Optional[OutputFormat] = None
     providers: Optional[ProviderOverrides] = None
+
+    @field_validator("aspect_ratio", mode="before")
+    @classmethod
+    def validate_aspect_ratio(cls, value: Optional[str]) -> Optional[str]:
+        return _normalize_and_validate_aspect_ratio(value)
 
 
 class ContinueTaskRequest(BaseModel):
@@ -125,10 +148,16 @@ class ContinueTaskRequest(BaseModel):
     continue_latest: bool = Field(default=False, description="是否续跑最新 run")
     additional_iterations: Optional[int] = Field(default=None, ge=1, le=100)
     user_feedback: Optional[str] = Field(default=None, max_length=5000)
+    aspect_ratio: Optional[str] = Field(default=None, description="覆盖续跑长宽比")
     auto_refine: bool = Field(default=False)
     max_iterations: Optional[int] = Field(default=None, ge=1, le=100)
     output_format: Optional[OutputFormat] = None
     providers: Optional[ProviderOverrides] = None
+
+    @field_validator("aspect_ratio", mode="before")
+    @classmethod
+    def validate_aspect_ratio(cls, value: Optional[str]) -> Optional[str]:
+        return _normalize_and_validate_aspect_ratio(value)
 
     @model_validator(mode="after")
     def validate_run_selector(self) -> ContinueTaskRequest:

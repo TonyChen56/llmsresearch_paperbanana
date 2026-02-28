@@ -216,6 +216,7 @@ class TaskManager:
             source_context=request.source_context,
             communicative_intent=request.communicative_intent,
             diagram_type=DiagramType.METHODOLOGY,
+            aspect_ratio=request.aspect_ratio,
         )
 
         state.progress = "执行生成"
@@ -259,6 +260,7 @@ class TaskManager:
             communicative_intent=request.intent,
             diagram_type=DiagramType.STATISTICAL_PLOT,
             raw_data={"data": request.raw_data},
+            aspect_ratio=request.aspect_ratio,
         )
 
         state.progress = "执行统计图生成"
@@ -294,6 +296,8 @@ class TaskManager:
         run_id = request.run_id.strip() if request.run_id else find_latest_run(str(output_base))
         state.progress = f"加载续跑状态：{run_id}"
         resume_state = load_resume_state(str(output_base), run_id)
+        if request.aspect_ratio:
+            resume_state.aspect_ratio = request.aspect_ratio
 
         pipeline = PaperBananaPipeline(settings=settings)
         state.progress = "执行续跑"

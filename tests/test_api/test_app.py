@@ -91,6 +91,41 @@ def test_submit_generate_task_invalid_provider_returns_422(monkeypatch):
         assert "vlm_provider must be one of" in detail_text
 
 
+def test_submit_generate_task_invalid_aspect_ratio_returns_422(monkeypatch):
+    with _client_with_token(monkeypatch) as client:
+        monkeypatch.setattr(api_app, "_task_manager", _DummyManager())
+        resp = client.post(
+            "/api/v1/tasks/generate",
+            headers={"Authorization": "Bearer test-token"},
+            json={
+                "source_context": "method text",
+                "communicative_intent": "caption",
+                "aspect_ratio": "10:7",
+            },
+        )
+        assert resp.status_code == 422
+        detail_text = str(resp.json())
+        assert "aspect_ratio must be one of" in detail_text
+
+
+def test_submit_continue_task_with_aspect_ratio(monkeypatch):
+    with _client_with_token(monkeypatch) as client:
+        monkeypatch.setattr(api_app, "_task_manager", _DummyManager())
+        resp = client.post(
+            "/api/v1/tasks/continue",
+            headers={"Authorization": "Bearer test-token"},
+            json={
+                "run_id": "run_20260226_120000_ab12cd",
+                "additional_iterations": 1,
+                "aspect_ratio": "16:9",
+            },
+        )
+        assert resp.status_code == 202
+        body = resp.json()
+        assert body["task_id"] == "task_continue"
+        assert body["task_type"] == "continue"
+
+
 def test_get_task_status_not_found(monkeypatch):
     with _client_with_token(monkeypatch) as client:
         monkeypatch.setattr(api_app, "_task_manager", _DummyManager())

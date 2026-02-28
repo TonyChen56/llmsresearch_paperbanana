@@ -24,6 +24,7 @@ request_examples = {
             "communicative_intent": "方法整体流程图",
             "refinement_iterations": 3,
             "optimize_inputs": True,
+            "aspect_ratio": "16:9",
             "providers": {
                 "vlm_provider": "openai",
                 "vlm_model": "gpt-5.2",
@@ -42,6 +43,7 @@ request_examples = {
                 "arc": [78.0, 80.5, 82.9],
             },
             "refinement_iterations": 2,
+            "aspect_ratio": "4:3",
             "providers": {
                 "vlm_provider": "kie",
                 "vlm_model": "gemini-2.5-pro",
@@ -56,6 +58,7 @@ request_examples = {
             "run_id": "run_20260226_120000_ab12cd",
             "additional_iterations": 2,
             "user_feedback": "把箭头更粗一些，阶段颜色区分更明显。",
+            "aspect_ratio": "21:9",
             "providers": {
                 "vlm_provider": "openrouter",
                 "vlm_model": "google/gemini-2.5-pro",
