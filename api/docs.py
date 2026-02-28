@@ -24,6 +24,12 @@ request_examples = {
             "communicative_intent": "方法整体流程图",
             "refinement_iterations": 3,
             "optimize_inputs": True,
+            "providers": {
+                "vlm_provider": "openai",
+                "vlm_model": "gpt-5.2",
+                "image_provider": "openai_imagen",
+                "image_model": "gpt-image-1.5",
+            },
         },
     },
     "plot": {
@@ -36,6 +42,12 @@ request_examples = {
                 "arc": [78.0, 80.5, 82.9],
             },
             "refinement_iterations": 2,
+            "providers": {
+                "vlm_provider": "kie",
+                "vlm_model": "gemini-2.5-pro",
+                "image_provider": "kie_nano_banana",
+                "image_model": "google/nano-banana-v2",
+            },
         },
     },
     "continue": {
@@ -44,6 +56,12 @@ request_examples = {
             "run_id": "run_20260226_120000_ab12cd",
             "additional_iterations": 2,
             "user_feedback": "把箭头更粗一些，阶段颜色区分更明显。",
+            "providers": {
+                "vlm_provider": "openrouter",
+                "vlm_model": "google/gemini-2.5-pro",
+                "image_provider": "openai_imagen",
+                "image_model": "gpt-image-1.5",
+            },
         },
     },
 }

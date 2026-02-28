@@ -57,7 +57,7 @@ class ProviderRegistry:
     def create_vlm(settings: Settings) -> VLMProvider:
         """Create a VLM provider based on settings."""
         provider = settings.vlm_provider.lower()
-        logger.info("Creating VLM provider", provider=provider, model=settings.vlm_model)
+        logger.info("Creating VLM provider", provider=provider, model=settings.effective_vlm_model)
 
         if provider == "gemini":
             _validate_api_key(settings.google_api_key, "GOOGLE_API_KEY")
@@ -65,7 +65,7 @@ class ProviderRegistry:
 
             return GeminiVLM(
                 api_key=settings.google_api_key,
-                model=settings.vlm_model,
+                model=settings.effective_vlm_model,
             )
         elif provider == "openrouter":
             _validate_api_key(settings.openrouter_api_key, "OPENROUTER_API_KEY")
@@ -73,7 +73,7 @@ class ProviderRegistry:
 
             return OpenRouterVLM(
                 api_key=settings.openrouter_api_key,
-                model=settings.vlm_model,
+                model=settings.effective_vlm_model,
             )
         elif provider == "openai":
             _validate_api_key(settings.openai_api_key, "OPENAI_API_KEY")
@@ -81,7 +81,7 @@ class ProviderRegistry:
 
             return OpenAIVLM(
                 api_key=settings.openai_api_key,
-                model=settings.openai_vlm_model or settings.vlm_model,
+                model=settings.effective_vlm_model,
                 base_url=settings.openai_base_url,
             )
         elif provider == "kie":
@@ -90,7 +90,7 @@ class ProviderRegistry:
 
             return KieVLM(
                 api_key=settings.kie_api_key,
-                model="gemini-2.5-flash",
+                model=settings.effective_vlm_model,
             )
         else:
             raise ValueError(
@@ -101,7 +101,9 @@ class ProviderRegistry:
     def create_image_gen(settings: Settings) -> ImageGenProvider:
         """Create an image generation provider based on settings."""
         provider = settings.image_provider.lower()
-        logger.info("Creating image gen provider", provider=provider, model=settings.image_model)
+        logger.info(
+            "Creating image gen provider", provider=provider, model=settings.effective_image_model
+        )
 
         if provider == "google_imagen":
             _validate_api_key(settings.google_api_key, "GOOGLE_API_KEY")
@@ -109,7 +111,7 @@ class ProviderRegistry:
 
             return GoogleImagenGen(
                 api_key=settings.google_api_key,
-                model=settings.image_model,
+                model=settings.effective_image_model,
             )
         elif provider == "openrouter_imagen":
             _validate_api_key(settings.openrouter_api_key, "OPENROUTER_API_KEY")
@@ -119,7 +121,7 @@ class ProviderRegistry:
 
             return OpenRouterImageGen(
                 api_key=settings.openrouter_api_key,
-                model=settings.image_model,
+                model=settings.effective_image_model,
             )
         elif provider == "openai_imagen":
             _validate_api_key(settings.openai_api_key, "OPENAI_API_KEY")
@@ -127,7 +129,7 @@ class ProviderRegistry:
 
             return OpenAIImageGen(
                 api_key=settings.openai_api_key,
-                model=settings.openai_image_model or settings.image_model,
+                model=settings.effective_image_model,
                 base_url=settings.openai_base_url,
             )
         elif provider in ("kie_nano_banana", "kie"):
@@ -138,7 +140,7 @@ class ProviderRegistry:
 
             return KieNanoBananaImageGen(
                 api_key=settings.kie_api_key,
-                model="google/nano-banana",
+                model=settings.effective_image_model,
             )
         else:
             raise ValueError(

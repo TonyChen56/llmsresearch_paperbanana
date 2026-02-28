@@ -6,9 +6,36 @@ import datetime as dt
 from enum import Enum
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 OutputFormat = Literal["png", "jpeg", "webp"]
+
+ALLOWED_VLM_PROVIDERS = frozenset({"gemini", "openrouter", "openai", "kie"})
+ALLOWED_IMAGE_PROVIDERS = frozenset(
+    {"google_imagen", "openrouter_imagen", "openai_imagen", "kie_nano_banana", "kie"}
+)
+
+
+def _normalize_optional(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    normalized = value.strip()
+    if not normalized:
+        return None
+    return normalized
+
+
+def _normalize_and_validate_provider(
+    value: Optional[str], *, allowed: frozenset[str], field_name: str
+) -> Optional[str]:
+    normalized = _normalize_optional(value)
+    if normalized is None:
+        return None
+    normalized = normalized.lower()
+    if normalized not in allowed:
+        allowed_text = ", ".join(sorted(allowed))
+        raise ValueError(f"{field_name} must be one of: {allowed_text}")
+    return normalized
 
 
 class TaskStatus(str, Enum):
@@ -43,6 +70,25 @@ class ProviderOverrides(BaseModel):
     vlm_model: Optional[str] = None
     image_provider: Optional[str] = None
     image_model: Optional[str] = None
+
+    @field_validator("vlm_provider", mode="before")
+    @classmethod
+    def validate_vlm_provider(cls, value: Optional[str]) -> Optional[str]:
+        return _normalize_and_validate_provider(
+            value, allowed=ALLOWED_VLM_PROVIDERS, field_name="vlm_provider"
+        )
+
+    @field_validator("image_provider", mode="before")
+    @classmethod
+    def validate_image_provider(cls, value: Optional[str]) -> Optional[str]:
+        return _normalize_and_validate_provider(
+            value, allowed=ALLOWED_IMAGE_PROVIDERS, field_name="image_provider"
+        )
+
+    @field_validator("vlm_model", "image_model", mode="before")
+    @classmethod
+    def normalize_model_name(cls, value: Optional[str]) -> Optional[str]:
+        return _normalize_optional(value)
 
 
 class GenerateTaskRequest(BaseModel):
@@ -101,6 +147,18 @@ class EvaluateTaskPayload(BaseModel):
     caption: str = Field(min_length=1)
     vlm_provider: Optional[str] = None
     vlm_model: Optional[str] = None
+
+    @field_validator("vlm_provider", mode="before")
+    @classmethod
+    def validate_vlm_provider(cls, value: Optional[str]) -> Optional[str]:
+        return _normalize_and_validate_provider(
+            value, allowed=ALLOWED_VLM_PROVIDERS, field_name="vlm_provider"
+        )
+
+    @field_validator("vlm_model", mode="before")
+    @classmethod
+    def normalize_vlm_model(cls, value: Optional[str]) -> Optional[str]:
+        return _normalize_optional(value)
 
 
 class TaskResult(BaseModel):

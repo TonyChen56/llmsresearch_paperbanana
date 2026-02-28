@@ -74,6 +74,23 @@ def test_submit_generate_task(monkeypatch):
         assert body["task_type"] == "generate"
 
 
+def test_submit_generate_task_invalid_provider_returns_422(monkeypatch):
+    with _client_with_token(monkeypatch) as client:
+        monkeypatch.setattr(api_app, "_task_manager", _DummyManager())
+        resp = client.post(
+            "/api/v1/tasks/generate",
+            headers={"Authorization": "Bearer test-token"},
+            json={
+                "source_context": "method text",
+                "communicative_intent": "caption",
+                "providers": {"vlm_provider": "not_supported"},
+            },
+        )
+        assert resp.status_code == 422
+        detail_text = str(resp.json())
+        assert "vlm_provider must be one of" in detail_text
+
+
 def test_get_task_status_not_found(monkeypatch):
     with _client_with_token(monkeypatch) as client:
         monkeypatch.setattr(api_app, "_task_manager", _DummyManager())
@@ -102,6 +119,28 @@ def test_submit_evaluate_task(monkeypatch, tmp_path: Path):
         )
         assert resp.status_code == 202
         assert resp.json()["task_type"] == "evaluate"
+
+
+def test_submit_evaluate_task_invalid_vlm_provider_returns_422(monkeypatch, tmp_path: Path):
+    monkeypatch.setenv("OUTPUT_DIR", str(tmp_path))
+    with _client_with_token(monkeypatch) as client:
+        monkeypatch.setattr(api_app, "_task_manager", _DummyManager())
+        resp = client.post(
+            "/api/v1/tasks/evaluate",
+            headers={"Authorization": "Bearer test-token"},
+            files={
+                "generated_image": ("generated.png", b"\x89PNG\r\n\x1a\n", "image/png"),
+                "reference_image": ("reference.png", b"\x89PNG\r\n\x1a\n", "image/png"),
+            },
+            data={
+                "source_context": "context",
+                "caption": "caption",
+                "vlm_provider": "not_supported",
+            },
+        )
+        assert resp.status_code == 422
+        detail_text = str(resp.json())
+        assert "vlm_provider must be one of" in detail_text
 
 
 def test_download_artifact_success(monkeypatch, tmp_path: Path):

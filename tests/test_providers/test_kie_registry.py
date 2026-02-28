@@ -9,7 +9,7 @@ from paperbanana.providers.registry import ProviderRegistry
 
 
 def test_create_kie_vlm():
-    """Registry creates KIE VLM with fixed Gemini 2.5 Flash model."""
+    """Registry creates KIE VLM with legacy default model."""
     settings = Settings(
         vlm_provider="kie",
         kie_api_key="test-key",
@@ -19,8 +19,20 @@ def test_create_kie_vlm():
     assert vlm.model_name == "gemini-2.5-flash"
 
 
+def test_create_kie_vlm_with_override_model():
+    """KIE VLM should use request/config override model when provided."""
+    settings = Settings(
+        vlm_provider="kie",
+        vlm_model="gemini-2.5-pro",
+        kie_api_key="test-key",
+    )
+    vlm = ProviderRegistry.create_vlm(settings)
+    assert vlm.name == "kie"
+    assert vlm.model_name == "gemini-2.5-pro"
+
+
 def test_create_kie_nano_banana_image_gen():
-    """Registry creates KIE image provider with fixed Nano Banana model."""
+    """Registry creates KIE image provider with legacy default model."""
     settings = Settings(
         image_provider="kie_nano_banana",
         kie_api_key="test-key",
@@ -28,6 +40,18 @@ def test_create_kie_nano_banana_image_gen():
     gen = ProviderRegistry.create_image_gen(settings)
     assert gen.name == "kie_nano_banana"
     assert gen.model_name == "google/nano-banana"
+
+
+def test_create_kie_image_gen_with_override_model():
+    """KIE image provider should use request/config override model when provided."""
+    settings = Settings(
+        image_provider="kie_nano_banana",
+        image_model="google/nano-banana-v2",
+        kie_api_key="test-key",
+    )
+    gen = ProviderRegistry.create_image_gen(settings)
+    assert gen.name == "kie_nano_banana"
+    assert gen.model_name == "google/nano-banana-v2"
 
 
 def test_missing_kie_api_key_raises_helpful_error():

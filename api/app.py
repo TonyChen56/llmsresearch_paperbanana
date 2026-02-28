@@ -14,6 +14,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import ValidationError
 
 from paperbanana.core.config import Settings
 from paperbanana.core.utils import detect_image_mime_type, ensure_dir
@@ -238,14 +239,25 @@ async def create_evaluate_task(
     generated_path.write_bytes(generated_bytes)
     reference_path.write_bytes(reference_bytes)
 
-    payload = EvaluateTaskPayload(
-        generated_image_path=str(generated_path),
-        reference_image_path=str(reference_path),
-        source_context=source_context,
-        caption=caption,
-        vlm_provider=vlm_provider,
-        vlm_model=vlm_model,
-    )
+    try:
+        payload = EvaluateTaskPayload(
+            generated_image_path=str(generated_path),
+            reference_image_path=str(reference_path),
+            source_context=source_context,
+            caption=caption,
+            vlm_provider=vlm_provider,
+            vlm_model=vlm_model,
+        )
+    except ValidationError as exc:
+        serializable_errors = [
+            {
+                "loc": list(err.get("loc", ())),
+                "msg": err.get("msg", "Invalid input"),
+                "type": err.get("type", "value_error"),
+            }
+            for err in exc.errors()
+        ]
+        raise HTTPException(status_code=422, detail=serializable_errors) from exc
 
     manager = _get_task_manager()
     task_id = await manager.submit_evaluate(payload)

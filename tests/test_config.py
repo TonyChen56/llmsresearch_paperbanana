@@ -66,3 +66,27 @@ def test_output_format_from_yaml_invalid():
             Settings.from_yaml(path)
     finally:
         Path(path).unlink(missing_ok=True)
+
+
+def test_effective_vlm_model_kie_uses_legacy_default():
+    """KIE keeps legacy default model when no override is supplied."""
+    settings = Settings(vlm_provider="kie")
+    assert settings.effective_vlm_model == "gemini-2.5-flash"
+
+
+def test_effective_vlm_model_kie_uses_override():
+    """KIE uses custom model when override is supplied."""
+    settings = Settings(vlm_provider="kie", vlm_model="gemini-2.5-pro")
+    assert settings.effective_vlm_model == "gemini-2.5-pro"
+
+
+def test_effective_image_model_kie_uses_legacy_default():
+    """KIE image provider keeps legacy default model when no override is supplied."""
+    settings = Settings(image_provider="kie_nano_banana")
+    assert settings.effective_image_model == "google/nano-banana"
+
+
+def test_effective_image_model_kie_uses_override():
+    """KIE image provider uses custom model when override is supplied."""
+    settings = Settings(image_provider="kie_nano_banana", image_model="google/nano-banana-v2")
+    assert settings.effective_image_model == "google/nano-banana-v2"

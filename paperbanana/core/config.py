@@ -92,13 +92,21 @@ class Settings(BaseSettings):
     openai_image_model: Optional[str] = Field(default=None, alias="OPENAI_IMAGE_MODEL")
     kie_api_key: Optional[str] = Field(default=None, alias="KIE_API_KEY")
 
+    # Provider-specific compatibility defaults
+    kie_default_vlm_model: str = "gemini-2.5-flash"
+    kie_default_image_model: str = "google/nano-banana"
+
     @property
     def effective_vlm_model(self) -> str:
         """Return the VLM model for the active provider."""
         if self.vlm_provider == "openai" and self.openai_vlm_model:
             return self.openai_vlm_model
-        if self.vlm_provider == "kie":
-            return "gemini-2.5-flash"
+        # Preserve historical KIE behavior when no explicit model override is provided.
+        if (
+            self.vlm_provider == "kie"
+            and self.vlm_model == Settings.model_fields["vlm_model"].default
+        ):
+            return self.kie_default_vlm_model
         return self.vlm_model
 
     @property
@@ -106,8 +114,12 @@ class Settings(BaseSettings):
         """Return the image model for the active provider."""
         if self.image_provider == "openai_imagen" and self.openai_image_model:
             return self.openai_image_model
-        if self.image_provider in {"kie", "kie_nano_banana"}:
-            return "google/nano-banana"
+        # Preserve historical KIE image default when no explicit override is provided.
+        if (
+            self.image_provider in {"kie", "kie_nano_banana"}
+            and self.image_model == Settings.model_fields["image_model"].default
+        ):
+            return self.kie_default_image_model
         return self.image_model
 
     # SSL
