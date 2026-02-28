@@ -16,6 +16,17 @@ from urllib.request import Request, urlopen
 
 
 BASE_URL = "https://api1.paperbanana.me"
+DEFAULT_SOURCE_CONTEXT = """The Transformer model follows an encoder-decoder structure using stacked self-attention and fully connected layers.
+
+Encoder: Stack of N=6 identical layers. Each layer has two sub-layers: (1) multi-head self-attention, and (2) position-wise feed-forward network. Residual connections around each sub-layer, followed by layer normalization.
+
+Decoder: Stack of N=6 identical layers. In addition to the two encoder sub-layers, the decoder inserts a third sub-layer for multi-head cross-attention over the encoder output. Masked self-attention prevents attending to subsequent positions.
+
+Multi-Head Attention: Linearly project queries, keys, values h times, perform scaled dot-product attention in parallel, concatenate and project again.
+
+Positional Encoding: Sinusoidal positional encodings added to input embeddings.
+"""
+DEFAULT_CAPTION = "The Transformer - model architecture (Vaswani et al., 2017)"
 
 
 def _project_root() -> Path:
@@ -158,11 +169,14 @@ def run(args: argparse.Namespace) -> int:
         print("错误: 未找到 PAPERBANANA_API_TOKEN（环境变量或项目根目录 .env）。", file=sys.stderr)
         return 2
 
-    prompt_path = Path(args.prompt_file).expanduser().resolve()
-    if not prompt_path.exists():
-        print(f"错误: 提示词文件不存在: {prompt_path}", file=sys.stderr)
-        return 2
-    source_context = prompt_path.read_text(encoding="utf-8")
+    if args.prompt_file:
+        prompt_path = Path(args.prompt_file).expanduser().resolve()
+        if not prompt_path.exists():
+            print(f"错误: 提示词文件不存在: {prompt_path}", file=sys.stderr)
+            return 2
+        source_context = prompt_path.read_text(encoding="utf-8")
+    else:
+        source_context = DEFAULT_SOURCE_CONTEXT
 
     base_url = (args.base_url or BASE_URL).rstrip("/")
     submit_url = f"{base_url}/api/v1/tasks/generate"
@@ -245,7 +259,7 @@ def run(args: argparse.Namespace) -> int:
 
     output_dir = Path(__file__).resolve().parent
     ext = _guess_extension(content_type, artifact_url)
-    output_path = output_dir / f"generated_{task_id}{ext}"
+    output_path = output_dir / f"{args.output_name}{ext}"
     output_path.write_bytes(content)
 
     status_dump = output_dir / f"task_{task_id}.json"
@@ -265,13 +279,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--prompt-file",
-        default=str(_project_root() / "examples" / "sample_inputs" / "transformer_method.txt"),
-        help="项目内提示词文件路径",
+        default=None,
+        help="可选：提示词文件路径；不传则使用脚本内置的 Transformer 提示词",
     )
     parser.add_argument(
         "--caption",
-        default="Overview of our encoder-decoder architecture with sparse routing",
+        default=DEFAULT_CAPTION,
         help="图表标题",
+    )
+    parser.add_argument(
+        "--output-name",
+        default="transformer",
+        help="输出图片文件名（不含后缀），默认 transformer",
     )
     parser.add_argument("--refinement-iterations", type=int, default=1, help="精化迭代次数")
     parser.add_argument("--optimize-inputs", action="store_true", help="是否启用输入优化")
