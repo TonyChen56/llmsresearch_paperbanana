@@ -16,6 +16,11 @@ from urllib.request import Request, urlopen
 
 
 BASE_URL = "https://api1.paperbanana.me"
+DEFAULT_VLM_PROVIDER = "kie"
+DEFAULT_VLM_MODEL = "gemini-2.5-flash"
+DEFAULT_IMAGE_PROVIDER = "kie_nano_banana"
+DEFAULT_IMAGE_MODEL = "google/nano-banana"
+DEFAULT_ASPECT_RATIO = "16:9"
 DEFAULT_SOURCE_CONTEXT = """The Transformer model follows an encoder-decoder structure using stacked self-attention and fully connected layers.
 
 Encoder: Stack of N=6 identical layers. Each layer has two sub-layers: (1) multi-head self-attention, and (2) position-wise feed-forward network. Residual connections around each sub-layer, followed by layer normalization.
@@ -30,7 +35,11 @@ DEFAULT_CAPTION = "The Transformer - model architecture (Vaswani et al., 2017)"
 
 
 def _project_root() -> Path:
-    return Path(__file__).resolve().parent.parent
+    current = Path(__file__).resolve()
+    for parent in current.parents:
+        if (parent / "pyproject.toml").exists():
+            return parent
+    return current.parent.parent.parent
 
 
 def _load_token_from_env_file() -> str | None:
@@ -186,6 +195,8 @@ def run(args: argparse.Namespace) -> int:
         "refinement_iterations": args.refinement_iterations,
         "optimize_inputs": args.optimize_inputs,
     }
+    if args.aspect_ratio:
+        payload["aspect_ratio"] = args.aspect_ratio
     providers_payload = {
         "vlm_provider": args.vlm_provider,
         "vlm_model": args.vlm_model,
@@ -289,30 +300,52 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--output-name",
-        default="transformer",
-        help="输出图片文件名（不含后缀），默认 transformer",
+        default="transformer_kie",
+        help="输出图片文件名（不含后缀），默认 transformer_kie",
     )
     parser.add_argument("--refinement-iterations", type=int, default=1, help="精化迭代次数")
     parser.add_argument("--optimize-inputs", action="store_true", help="是否启用输入优化")
     parser.add_argument(
+        "--aspect-ratio",
+        default=DEFAULT_ASPECT_RATIO,
+        choices=["1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "21:9"],
+        help="目标长宽比，默认 16:9",
+    )
+    parser.add_argument(
         "--vlm-provider",
-        default=os.getenv("PB_VLM_PROVIDER") or _load_optional_env_value("VLM_PROVIDER"),
-        help="可选：覆盖 VLM provider（如 kie/openai/gemini）",
+        default=(
+            os.getenv("PB_VLM_PROVIDER")
+            or _load_optional_env_value("VLM_PROVIDER")
+            or DEFAULT_VLM_PROVIDER
+        ),
+        help="可选：覆盖 VLM provider，默认 kie",
     )
     parser.add_argument(
         "--vlm-model",
-        default=os.getenv("PB_VLM_MODEL") or _load_optional_env_value("VLM_MODEL"),
-        help="可选：覆盖 VLM 模型名",
+        default=(
+            os.getenv("PB_VLM_MODEL")
+            or _load_optional_env_value("VLM_MODEL")
+            or DEFAULT_VLM_MODEL
+        ),
+        help="可选：覆盖 VLM 模型名，默认 gemini-2.5-flash",
     )
     parser.add_argument(
         "--image-provider",
-        default=os.getenv("PB_IMAGE_PROVIDER") or _load_optional_env_value("IMAGE_PROVIDER"),
-        help="可选：覆盖图像 provider（如 kie_nano_banana/openai_imagen）",
+        default=(
+            os.getenv("PB_IMAGE_PROVIDER")
+            or _load_optional_env_value("IMAGE_PROVIDER")
+            or DEFAULT_IMAGE_PROVIDER
+        ),
+        help="可选：覆盖图像 provider，默认 kie_nano_banana",
     )
     parser.add_argument(
         "--image-model",
-        default=os.getenv("PB_IMAGE_MODEL") or _load_optional_env_value("IMAGE_MODEL"),
-        help="可选：覆盖图像模型名",
+        default=(
+            os.getenv("PB_IMAGE_MODEL")
+            or _load_optional_env_value("IMAGE_MODEL")
+            or DEFAULT_IMAGE_MODEL
+        ),
+        help="可选：覆盖图像模型名，默认 google/nano-banana",
     )
     parser.add_argument("--poll-interval-seconds", type=int, default=5, help="轮询间隔秒数")
     parser.add_argument("--timeout-seconds", type=int, default=1800, help="轮询超时秒数")
