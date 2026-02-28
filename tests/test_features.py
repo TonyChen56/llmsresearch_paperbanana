@@ -503,6 +503,42 @@ async def test_auto_refine_stops_when_critic_satisfied(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_auto_refine_continues_when_critic_json_parse_fails(tmp_path):
+    """Critic parse failures should trigger another iteration, not early stop."""
+    vlm = _MockVLM(
+        [
+            "Planned description for the diagram",
+            "Styled description with improved aesthetics",
+            "I cannot provide JSON right now.",
+            _critic_json([], None),
+        ]
+    )
+    image_gen = _MockImageGen()
+
+    settings = Settings(
+        output_dir=str(tmp_path / "outputs"),
+        reference_set_path=str(tmp_path / "refs"),
+        auto_refine=True,
+        max_iterations=5,
+        save_iterations=False,
+    )
+    pipeline = PaperBananaPipeline(settings=settings, vlm_client=vlm, image_gen_fn=image_gen)
+
+    result = await pipeline.generate(
+        GenerationInput(
+            source_context="Encoder-decoder architecture",
+            communicative_intent="Architecture overview",
+        )
+    )
+
+    assert len(result.iterations) == 2
+    assert result.iterations[0].critique.needs_revision is True
+    assert result.iterations[0].critique.revised_description is None
+    assert "valid JSON" in result.iterations[0].critique.summary
+    assert result.iterations[1].critique.needs_revision is False
+
+
+@pytest.mark.asyncio
 async def test_auto_refine_respects_max_iterations_cap(tmp_path):
     """auto_refine obeys max_iterations even if critic never stops suggesting."""
     max_cap = 3

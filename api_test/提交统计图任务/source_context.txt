@@ -1,0 +1,9 @@
+Table 1: Performance comparison of different models on three benchmarks.
+
+| Model     | MMLU  | HellaSwag | ARC-C |
+|-----------|-------|-----------|-------|
+| GPT-4o    | 88.7  | 95.3      | 96.4  |
+| Claude 3  | 86.8  | 93.7      | 93.5  |
+| Gemini    | 85.0  | 87.8      | 89.8  |
+| Llama 3   | 79.2  | 82.0      | 83.4  |
+| Mistral   | 75.3  | 81.4      | 78.6  |

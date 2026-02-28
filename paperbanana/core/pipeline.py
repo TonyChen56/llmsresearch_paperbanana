@@ -370,20 +370,28 @@ class PaperBananaPipeline:
                 )
 
             # Check if revision needed
-            if critique.needs_revision and critique.revised_description:
+            if critique.needs_revision:
                 logger.info(
                     "Revision needed",
                     iteration=i + 1,
                     summary=critique.summary,
                 )
-                current_description = critique.revised_description
-            else:
-                logger.info(
-                    "No further revision needed",
-                    iteration=i + 1,
-                    summary=critique.summary,
-                )
-                break
+                if critique.revised_description:
+                    current_description = critique.revised_description
+                else:
+                    logger.warning(
+                        "Critic requested revision but provided no revised_description; "
+                        "continuing with current description",
+                        iteration=i + 1,
+                    )
+                continue
+
+            logger.info(
+                "No further revision needed",
+                iteration=i + 1,
+                summary=critique.summary,
+            )
+            break
 
         # Final output
         final_image = iterations[-1].image_path
@@ -551,20 +559,28 @@ class PaperBananaPipeline:
                     iter_dir / "details.json",
                 )
 
-            if critique.needs_revision and critique.revised_description:
+            if critique.needs_revision:
                 logger.info(
                     "Revision needed",
                     iteration=iter_num,
                     summary=critique.summary,
                 )
-                current_description = critique.revised_description
-            else:
-                logger.info(
-                    "No further revision needed",
-                    iteration=iter_num,
-                    summary=critique.summary,
-                )
-                break
+                if critique.revised_description:
+                    current_description = critique.revised_description
+                else:
+                    logger.warning(
+                        "Critic requested revision but provided no revised_description; "
+                        "continuing with current description",
+                        iteration=iter_num,
+                    )
+                continue
+
+            logger.info(
+                "No further revision needed",
+                iteration=iter_num,
+                summary=critique.summary,
+            )
+            break
 
         # Final output
         final_image = iterations[-1].image_path

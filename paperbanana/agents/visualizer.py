@@ -123,21 +123,45 @@ class VisualizerAgent(BaseAgent):
             max_tokens=4096,
         )
 
-        # Extract code from response
-        code = self._extract_code(code_response)
-
         if output_path is None:
             output_path = str(self.output_dir / f"plot_iter_{iteration}.png")
 
-        # Execute the code
-        success = self._execute_plot_code(code, output_path)
-        if not success:
-            logger.error("Plot code execution failed, using placeholder")
-            # Create a placeholder image
-            placeholder = Image.new("RGB", (1024, 768), color=(255, 255, 255))
-            save_image(placeholder, output_path)
+        current_code = self._extract_code(code_response)
+        max_attempts = 3
+        last_error: Optional[str] = None
 
-        return output_path
+        for attempt in range(1, max_attempts + 1):
+            success, error_message = self._execute_plot_code(current_code, output_path)
+            if success:
+                return output_path
+
+            last_error = error_message or "Unknown execution error"
+            logger.error(
+                "Plot code execution failed",
+                attempt=attempt,
+                max_attempts=max_attempts,
+                error=last_error[:500],
+            )
+
+            if attempt == max_attempts:
+                break
+
+            repair_prompt = self._build_plot_repair_prompt(
+                description=full_description,
+                failed_code=current_code,
+                error_message=last_error,
+            )
+            logger.info("Retrying plot code generation", attempt=attempt + 1)
+            repair_response = await self.vlm.generate(
+                prompt=repair_prompt,
+                temperature=0.2,
+                max_tokens=4096,
+            )
+            current_code = self._extract_code(repair_response)
+
+        raise RuntimeError(
+            f"Plot code execution failed after {max_attempts} attempts: {last_error or 'Unknown error'}"
+        )
 
     def _extract_code(self, response: str) -> str:
         """Extract Python code from a VLM response."""
@@ -158,7 +182,34 @@ class VisualizerAgent(BaseAgent):
             return response[start:end].strip()
         return response.strip()
 
-    def _execute_plot_code(self, code: str, output_path: str) -> bool:
+    def _build_plot_repair_prompt(self, description: str, failed_code: str, error_message: str) -> str:
+        """Build a repair prompt from failed code and stderr details."""
+        return (
+            "The previous plotting code failed. Fix the code and return ONLY executable Python code.\n\n"
+            "Requirements:\n"
+            "- Use only matplotlib (no seaborn).\n"
+            "- Save using: plt.savefig(OUTPUT_PATH, dpi=300, bbox_inches='tight').\n"
+            "- Do NOT include plt.show().\n"
+            "- Keep data faithful to the plot description.\n"
+            "- Ensure compatibility with matplotlib 3.8+.\n\n"
+            f"## Plot Description\n{description}\n\n"
+            f"## Failed Code\n```python\n{failed_code}\n```\n\n"
+            f"## Runtime Error\n{error_message}\n\n"
+            "Return only corrected Python code."
+        )
+
+    def _is_blank_output(self, output_path: str) -> bool:
+        """Detect all-white outputs, which usually indicate a failed render path."""
+        try:
+            with Image.open(output_path) as img:
+                gray = img.convert("L")
+                lo, hi = gray.getextrema()
+                return lo == 255 and hi == 255
+        except Exception:
+            # If image cannot be parsed, treat as invalid output.
+            return True
+
+    def _execute_plot_code(self, code: str, output_path: str) -> tuple[bool, Optional[str]]:
         """Execute matplotlib code in a subprocess to generate a plot."""
         # Strip any OUTPUT_PATH assignments from VLM-generated code so the
         # injected value below is authoritative (the VLM is prompted to set
@@ -183,11 +234,16 @@ class VisualizerAgent(BaseAgent):
                 timeout=60,
             )
             if result.returncode != 0:
-                logger.error("Plot code error", stderr=result.stderr[:500])
-                return False
-            return Path(output_path).exists()
+                return False, (result.stderr or result.stdout or "Python execution failed")[:4000]
+
+            if not Path(output_path).exists():
+                return False, f"Code executed but output file not found: {output_path}"
+
+            if self._is_blank_output(output_path):
+                return False, "Generated output is blank (all-white image)."
+
+            return True, None
         except subprocess.TimeoutExpired:
-            logger.error("Plot code timed out")
-            return False
+            return False, "Plot code timed out after 60 seconds."
         finally:
             Path(temp_path).unlink(missing_ok=True)

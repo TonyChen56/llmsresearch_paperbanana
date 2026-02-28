@@ -88,16 +88,50 @@ class CriticAgent(BaseAgent):
 
     def _parse_response(self, response: str) -> CritiqueResult:
         """Parse the VLM response into a CritiqueResult."""
+        cleaned = response.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.strip("`")
+            if cleaned.lower().startswith("json"):
+                cleaned = cleaned[4:].strip()
+
+        # Try direct JSON parse first, then fallback to first object slice.
+        candidates = [cleaned]
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            candidates.append(cleaned[start : end + 1])
+
+        parsed: dict | None = None
         try:
-            data = json.loads(response)
-            return CritiqueResult(
-                critic_suggestions=data.get("critic_suggestions", []),
-                revised_description=data.get("revised_description"),
-            )
+            for candidate in candidates:
+                try:
+                    maybe = json.loads(candidate)
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(maybe, dict):
+                    parsed = maybe
+                    break
+            if parsed is None:
+                raise json.JSONDecodeError("No valid JSON object found", cleaned, 0)
         except (json.JSONDecodeError, KeyError) as e:
             logger.warning("Failed to parse critic response", error=str(e))
-            # Conservative fallback: empty suggestions means no revision needed
             return CritiqueResult(
-                critic_suggestions=[],
+                critic_suggestions=[
+                    "Critic output was not valid JSON; continue refining with a safer, simpler description."
+                ],
                 revised_description=None,
             )
+
+        suggestions = parsed.get("critic_suggestions", [])
+        if not isinstance(suggestions, list):
+            suggestions = [str(suggestions)]
+        normalized = [str(item).strip() for item in suggestions if str(item).strip()]
+
+        revised = parsed.get("revised_description")
+        if revised is not None:
+            revised = str(revised).strip() or None
+
+        return CritiqueResult(
+            critic_suggestions=normalized,
+            revised_description=revised,
+        )
