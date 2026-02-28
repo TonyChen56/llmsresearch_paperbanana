@@ -148,7 +148,19 @@ class PlannerAgent(BaseAgent):
                 )
         return images
 
-    _VALID_RATIOS = {"1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "21:9"}
+    _VALID_RATIOS = {
+        "1:1",
+        "2:3",
+        "3:2",
+        "3:4",
+        "4:3",
+        "4:5",
+        "5:4",
+        "9:16",
+        "16:9",
+        "21:9",
+        "auto",
+    }
 
     @classmethod
     def _parse_ratio(cls, text: str) -> tuple[str, str | None]:

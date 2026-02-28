@@ -54,6 +54,29 @@ def test_create_kie_image_gen_with_override_model():
     assert gen.model_name == "google/nano-banana-v2"
 
 
+def test_create_kie_nano_banana_pro_image_gen():
+    """Registry creates KIE Nano Banana Pro image provider with dedicated default model."""
+    settings = Settings(
+        image_provider="kie_nano_banana_pro",
+        kie_api_key="test-key",
+    )
+    gen = ProviderRegistry.create_image_gen(settings)
+    assert gen.name == "kie_nano_banana_pro"
+    assert gen.model_name == "nano-banana-pro"
+
+
+def test_create_kie_nano_banana_pro_image_gen_with_override_model():
+    """KIE Nano Banana Pro provider should use override model when provided."""
+    settings = Settings(
+        image_provider="kie_nano_banana_pro",
+        image_model="nano-banana-pro-custom",
+        kie_api_key="test-key",
+    )
+    gen = ProviderRegistry.create_image_gen(settings)
+    assert gen.name == "kie_nano_banana_pro"
+    assert gen.model_name == "nano-banana-pro-custom"
+
+
 def test_missing_kie_api_key_raises_helpful_error():
     """Missing KIE_API_KEY raises a help message for setup."""
     settings = Settings(vlm_provider="kie", kie_api_key=None)

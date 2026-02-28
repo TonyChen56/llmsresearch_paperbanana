@@ -141,9 +141,22 @@ class ProviderRegistry:
             return KieNanoBananaImageGen(
                 api_key=settings.kie_api_key,
                 model=settings.effective_image_model,
+                provider_name="kie_nano_banana",
+            )
+        elif provider == "kie_nano_banana_pro":
+            _validate_api_key(settings.kie_api_key, "KIE_API_KEY")
+            from paperbanana.providers.image_gen.kie_nano_banana import (
+                KieNanoBananaImageGen,
+            )
+
+            return KieNanoBananaImageGen(
+                api_key=settings.kie_api_key,
+                model=settings.effective_image_model,
+                provider_name="kie_nano_banana_pro",
             )
         else:
             raise ValueError(
                 f"Unknown image provider: {provider}. "
-                f"Available: google_imagen, openrouter_imagen, openai_imagen, kie_nano_banana"
+                "Available: google_imagen, openrouter_imagen, openai_imagen, "
+                "kie_nano_banana, kie_nano_banana_pro"
             )

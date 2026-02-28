@@ -98,6 +98,7 @@ class Settings(BaseSettings):
     # Provider-specific compatibility defaults
     kie_default_vlm_model: str = "gemini-2.5-flash"
     kie_default_image_model: str = "google/nano-banana"
+    kie_default_image_model_pro: str = "nano-banana-pro"
 
     @property
     def effective_vlm_model(self) -> str:
@@ -123,6 +124,15 @@ class Settings(BaseSettings):
             and self.image_model == Settings.model_fields["image_model"].default
         ):
             return self.kie_default_image_model
+        if (
+            self.image_provider == "kie_nano_banana_pro"
+            and self.image_model
+            in {
+                Settings.model_fields["image_model"].default,
+                self.kie_default_image_model,
+            }
+        ):
+            return self.kie_default_image_model_pro
         return self.image_model
 
     # SSL

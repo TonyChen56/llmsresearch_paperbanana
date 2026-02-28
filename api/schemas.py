@@ -12,9 +12,18 @@ OutputFormat = Literal["png", "jpeg", "webp"]
 
 ALLOWED_VLM_PROVIDERS = frozenset({"gemini", "openrouter", "openai", "kie"})
 ALLOWED_IMAGE_PROVIDERS = frozenset(
-    {"google_imagen", "openrouter_imagen", "openai_imagen", "kie_nano_banana", "kie"}
+    {
+        "google_imagen",
+        "openrouter_imagen",
+        "openai_imagen",
+        "kie_nano_banana",
+        "kie_nano_banana_pro",
+        "kie",
+    }
 )
-ALLOWED_ASPECT_RATIOS = frozenset({"1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "21:9"})
+ALLOWED_ASPECT_RATIOS = frozenset(
+    {"1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9", "auto"}
+)
 
 
 def _normalize_optional(value: Optional[str]) -> Optional[str]:

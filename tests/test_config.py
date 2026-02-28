@@ -90,3 +90,15 @@ def test_effective_image_model_kie_uses_override():
     """KIE image provider uses custom model when override is supplied."""
     settings = Settings(image_provider="kie_nano_banana", image_model="google/nano-banana-v2")
     assert settings.effective_image_model == "google/nano-banana-v2"
+
+
+def test_effective_image_model_kie_pro_uses_default():
+    """KIE Nano Banana Pro keeps its dedicated default model when no override is supplied."""
+    settings = Settings(image_provider="kie_nano_banana_pro")
+    assert settings.effective_image_model == "nano-banana-pro"
+
+
+def test_effective_image_model_kie_pro_uses_override():
+    """KIE Nano Banana Pro uses custom model when override is supplied."""
+    settings = Settings(image_provider="kie_nano_banana_pro", image_model="nano-banana-pro-v2")
+    assert settings.effective_image_model == "nano-banana-pro-v2"

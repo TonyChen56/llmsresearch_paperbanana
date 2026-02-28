@@ -71,7 +71,13 @@ class VisualizerAgent(BaseAgent):
                 description, raw_data, output_path, iteration, aspect_ratio
             )
         else:
-            return await self._generate_diagram(description, output_path, iteration, seed, aspect_ratio)
+            return await self._generate_diagram(
+                description,
+                output_path,
+                iteration,
+                seed,
+                aspect_ratio,
+            )
 
     async def _generate_diagram(
         self,
@@ -111,11 +117,13 @@ class VisualizerAgent(BaseAgent):
         mapping = {
             "21:9": (2016, 864),
             "16:9": (1792, 1024),
+            "5:4": (1280, 1024),
             "4:3": (1365, 1024),
             "3:2": (1536, 1024),
             "1:1": (1024, 1024),
             "2:3": (1024, 1536),
             "3:4": (1024, 1365),
+            "4:5": (1024, 1280),
             "9:16": (1024, 1792),
         }
         return mapping.get(ratio, (1792, 1024))
@@ -197,7 +205,8 @@ class VisualizerAgent(BaseAgent):
             logger.info("Plot code updated", path=str(code_path), attempt=attempt + 1)
 
         raise RuntimeError(
-            f"Plot code execution failed after {max_attempts} attempts: {last_error or 'Unknown error'}"
+            "Plot code execution failed after "
+            f"{max_attempts} attempts: {last_error or 'Unknown error'}"
         )
 
     def _extract_code(self, response: str) -> str:
@@ -219,10 +228,13 @@ class VisualizerAgent(BaseAgent):
             return response[start:end].strip()
         return response.strip()
 
-    def _build_plot_repair_prompt(self, description: str, failed_code: str, error_message: str) -> str:
+    def _build_plot_repair_prompt(
+        self, description: str, failed_code: str, error_message: str
+    ) -> str:
         """Build a repair prompt from failed code and stderr details."""
         return (
-            "The previous plotting code failed. Fix the code and return ONLY executable Python code.\n\n"
+            "The previous plotting code failed. Fix the code and return ONLY executable "
+            "Python code.\n\n"
             "Requirements:\n"
             "- Use only matplotlib (no seaborn).\n"
             "- Save using: plt.savefig(OUTPUT_PATH, dpi=300, bbox_inches='tight').\n"
@@ -257,7 +269,7 @@ class VisualizerAgent(BaseAgent):
 
         # Inject the output path and figure size from aspect ratio
         figsize_line = ""
-        if aspect_ratio:
+        if aspect_ratio and aspect_ratio != "auto":
             w, h = self._ratio_to_dimensions(aspect_ratio)
             # Scale to reasonable matplotlib inches (assume 150 dpi)
             fig_w, fig_h = round(w / 150, 1), round(h / 150, 1)

@@ -26,17 +26,19 @@ class KieNanoBananaImageGen(ImageGenProvider):
         base_url: str = "https://api.kie.ai",
         poll_interval_seconds: float = 2.0,
         max_poll_attempts: int = 120,
+        provider_name: str = "kie_nano_banana",
     ):
         self._api_key = api_key
         self._model = model
         self._base_url = base_url.rstrip("/")
         self._poll_interval_seconds = poll_interval_seconds
         self._max_poll_attempts = max_poll_attempts
+        self._provider_name = provider_name
         self._client = None
 
     @property
     def name(self) -> str:
-        return "kie_nano_banana"
+        return self._provider_name
 
     @property
     def model_name(self) -> str:
@@ -61,18 +63,24 @@ class KieNanoBananaImageGen(ImageGenProvider):
 
     @property
     def supported_ratios(self) -> list[str]:
-        # KIE Nano Banana uses image_size enums similar to mainstream T2I providers.
+        if self._provider_name == "kie_nano_banana_pro":
+            return ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9", "auto"]
+        # KIE Nano Banana (legacy) uses image_size enums similar to mainstream T2I providers.
         return ["1:1", "2:3", "3:2", "9:16", "16:9"]
 
     def _normalize_ratio(self, aspect_ratio: str) -> str:
-        """Map non-native ratios to the closest KIE-supported ratio."""
+        """Map non-native ratios to the closest provider-supported ratio."""
         if aspect_ratio in self.supported_ratios:
             return aspect_ratio
         fallback = {
             "3:4": "2:3",
             "4:3": "3:2",
             "21:9": "16:9",
+            "4:5": "2:3",
+            "5:4": "3:2",
         }
+        if self._provider_name == "kie_nano_banana_pro":
+            return fallback.get(aspect_ratio, "1:1")
         return fallback.get(aspect_ratio, "16:9")
 
     def _aspect_ratio_hint_from_ratio(self, ratio: str) -> str:
@@ -109,6 +117,14 @@ class KieNanoBananaImageGen(ImageGenProvider):
             return "2:3"
         return "1:1"
 
+    def _kie_resolution(self, width: int, height: int) -> str:
+        max_dim = max(width, height)
+        if max_dim <= 1024:
+            return "1K"
+        if max_dim <= 2048:
+            return "2K"
+        return "4K"
+
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=2, max=30))
     async def generate(
         self,
@@ -121,26 +137,41 @@ class KieNanoBananaImageGen(ImageGenProvider):
     ) -> Image.Image:
         client = self._get_client()
 
-        effective_ratio = (
-            self._normalize_ratio(aspect_ratio)
-            if aspect_ratio
-            else self._kie_image_size(width, height)
-        )
-        aspect_hint = self._aspect_ratio_hint_from_ratio(effective_ratio)
-        full_prompt = f"{prompt}\n\nGenerate this as a {aspect_hint} image."
         if negative_prompt:
-            full_prompt += f"\n\nAvoid: {negative_prompt}"
+            prompt = f"{prompt}\n\nAvoid: {negative_prompt}"
 
-        payload = {
-            "model": self._model,
-            "input": {
-                "prompt": full_prompt[:5000],
-                "output_format": "png",
-                "image_size": effective_ratio,
-            },
-        }
-        if seed is not None:
-            payload["input"]["seed"] = seed
+        if self._provider_name == "kie_nano_banana_pro":
+            effective_ratio = self._normalize_ratio(aspect_ratio) if aspect_ratio else "1:1"
+            payload = {
+                "model": self._model,
+                "input": {
+                    "prompt": prompt[:20000],
+                    "image_input": [],
+                    "aspect_ratio": effective_ratio,
+                    "resolution": self._kie_resolution(width, height),
+                    "output_format": "png",
+                },
+            }
+            if seed is not None:
+                logger.debug("Seed is not supported by kie_nano_banana_pro and will be ignored")
+        else:
+            effective_ratio = (
+                self._normalize_ratio(aspect_ratio)
+                if aspect_ratio
+                else self._kie_image_size(width, height)
+            )
+            aspect_hint = self._aspect_ratio_hint_from_ratio(effective_ratio)
+            full_prompt = f"{prompt}\n\nGenerate this as a {aspect_hint} image."
+            payload = {
+                "model": self._model,
+                "input": {
+                    "prompt": full_prompt[:5000],
+                    "output_format": "png",
+                    "image_size": effective_ratio,
+                },
+            }
+            if seed is not None:
+                payload["input"]["seed"] = seed
 
         create_response = await client.post("/api/v1/jobs/createTask", json=payload)
         create_response.raise_for_status()
@@ -179,14 +210,16 @@ class KieNanoBananaImageGen(ImageGenProvider):
             if payload.get("code") not in {None, 200}:
                 raise ValueError(f"KIE recordInfo failed: {payload}")
             data = self._unwrap_data(payload)
+            state = str(data.get("status") or data.get("state") or "").lower()
 
             urls = self._extract_result_urls(data)
             if urls:
                 return data
+            if state in {"success", "succeeded", "completed"}:
+                return data
 
-            status = str(data.get("status", "")).lower()
-            if any(token in status for token in ("fail", "error", "cancel")):
-                raise ValueError(f"KIE task {task_id} failed with status: {status}")
+            if any(token in state for token in ("fail", "error", "cancel")):
+                raise ValueError(f"KIE task {task_id} failed with status: {state}")
 
             await asyncio.sleep(self._poll_interval_seconds)
 
@@ -202,7 +235,9 @@ class KieNanoBananaImageGen(ImageGenProvider):
         return payload
 
     def _extract_result_urls(self, payload: dict) -> list[str]:
-        result_json = payload.get("resultJson") or payload.get("result_json") or payload.get("result")
+        result_json = (
+            payload.get("resultJson") or payload.get("result_json") or payload.get("result")
+        )
         parsed: dict = {}
 
         if isinstance(result_json, str):

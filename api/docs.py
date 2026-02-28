@@ -14,6 +14,7 @@ PaperBanana HTTP API：将生成、续跑、评测能力统一封装为异步任
 - 当前实例仅启用 KIE 通道
 - 建议固定使用：vlm_provider=kie（gemini-2.5-flash）
 - image_provider=kie_nano_banana（google/nano-banana）
+- 或使用 image_provider=kie_nano_banana_pro（nano-banana-pro）
 
 通用流程：
 1. 提交任务（POST）
@@ -33,8 +34,8 @@ request_examples = {
             "providers": {
                 "vlm_provider": "kie",
                 "vlm_model": "gemini-2.5-flash",
-                "image_provider": "kie_nano_banana",
-                "image_model": "google/nano-banana",
+                "image_provider": "kie_nano_banana_pro",
+                "image_model": "nano-banana-pro",
             },
         },
     },
