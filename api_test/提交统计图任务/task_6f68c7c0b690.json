@@ -1,0 +1,66 @@
+{
+  "task_id": "6f68c7c0b690",
+  "task_type": "plot",
+  "status": "completed",
+  "created_at": "2026-02-28T13:27:24.102723Z",
+  "started_at": "2026-02-28T13:27:24.103224Z",
+  "completed_at": "2026-02-28T13:30:08.143538Z",
+  "progress": null,
+  "result": {
+    "artifact_url": "/api/v1/tasks/6f68c7c0b690/artifact",
+    "artifact_type": "image",
+    "run_id": "run_20260228_132724_6cd779",
+    "description": "## Detailed Description\n\nThe plot effectively represents the performance comparison of various Large Language Models (LLMs) across three distinct benchmarks using a grouped bar chart. Each group of bars corresponds to a specific benchmark, and within each group, individual bars represent the performance of different LLMs.\n\n**Plot Type:** Grouped Bar Chart\n\n**Title:** Performance Comparison of Frontier LLMs Across Three Benchmarks\n*   **Font Family:** Sans-Serif (e.g., 'Arial', 'Helvetica', or 'DejaVu Sans')\n*   **Font Size:** 16pt\n*   **Font Weight:** Bold\n*   **Color:** #333333 (Dark Gray)\n\n**Axes:**\n\n*   **X-axis (Categorical):** \"Benchmark\"\n    *   **Labels:** MMLU, HellaSwag, ARC-C\n    *   Each benchmark label is centered beneath its group of bars.\n    *   **Font Family:** Sans-Serif (e.g., 'Arial', 'Helvetica', or 'DejaVu Sans')\n    *   **Font Size:** 12pt\n    *   **Font Weight:** Bold\n    *   **Color:** #333333\n    *   **Tick Mark Style:** None (removed entirely in favor of grid alignment)\n    *   **Tick Label Rotation:** 0 degrees (horizontal orientation)\n\n*   **Y-axis (Quantitative):** \"Performance Score (%)\"\n    *   **Range:** 0 to 100\n    *   **Major Ticks:** 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100\n    *   **Minor Ticks:** Every 5 units (e.g., 5, 15, 25, ...)\n    *   **Font Family:** Sans-Serif (e.g., 'Arial', 'Helvetica', or 'DejaVu Sans')\n    *   **Font Size:** 12pt\n    *   **Font Weight:** Bold\n    *   **Color:** #333333\n    *   **Tick Mark Style:** Inward, 0.5pt thickness, #999999 color\n*   **Spines (Borders):** Black (#000000) spines on all four sides, creating a \"boxed\" look.\n\n**Data Representation (Bars):**\n\nEach bar represents the performance score of a specific model on a given benchmark. The bars are grouped by benchmark, with models ordered consistently within each group (e.g., from highest-performing to lowest-performing, or alphabetically).\n\n*   **Bar Width:** 0.15 units\n*   **Spacing between bars within a group:** 0.02 units\n*   **Spacing between benchmark groups:** 0.5 units\n*   **Bar Border:** A thin black border (0.5pt thickness) around each bar for high-definition and contrast. To enhance accessibility for colorblind readers or black-and-white printing, consider incorporating geometric patterns (hatches, dots, stripes) within the bars in addition to color differentiation.\n\n**Colors for Models:**\n\n*   **GPT-4o:** #1f77b4 (Vibrant Blue)\n*   **Claude 3:** #ff7f0e (Safety Orange)\n*   **Gemini:** #2ca02c (Forest Green)\n*   **Llama 3:** #d62728 (Brick Red)\n*   **Mistral:** #9467bd (Muted Purple)\n\n**Explicit Data Points and Bar Coordinates:**\n\nAssuming the center of the MMLU group is at x=1.0, HellaSwag at x=2.0, and ARC-C at x=3.0. The individual bar x-coordinates are calculated as `center_x + offset_for_model`, where offsets are -0.32, -0.16, 0.00, 0.16, 0.32 for the five models respectively, maintaining a total group width of approximately 0.83 units.\n\n1.  **Benchmark: MMLU** (Group Center X = 1.0)\n    *   **GPT-4o:** X-coordinate: 0.68, Y-coordinate (Height): 88.7, Color: #1f77b4\n    *   **Claude 3:** X-coordinate: 0.84, Y-coordinate (Height): 86.8, Color: #ff7f0e\n    *   **Gemini:** X-coordinate: 1.00, Y-coordinate (Height): 85.0, Color: #2ca02c\n    *   **Llama 3:** X-coordinate: 1.16, Y-coordinate (Height): 79.2, Color: #d62728\n    *   **Mistral:** X-coordinate: 1.32, Y-coordinate (Height): 75.3, Color: #9467bd\n\n2.  **Benchmark: HellaSwag** (Group Center X = 2.0)\n    *   **GPT-4o:** X-coordinate: 1.68, Y-coordinate (Height): 95.3, Color: #1f77b4\n    *   **Claude 3:** X-coordinate: 1.84, Y-coordinate (Height): 93.7, Color: #ff7f0e\n    *   **Gemini:** X-coordinate: 2.00, Y-coordinate (Height): 87.8, Color: #2ca02c\n    *   **Llama 3:** X-coordinate: 2.16, Y-coordinate (Height): 82.0, Color: #d62728\n    *   **Mistral:** X-coordinate: 2.32, Y-coordinate (Height): 81.4, Color: #9467bd\n\n3.  **Benchmark: ARC-C** (Group Center X = 3.0)\n    *   **GPT-4o:** X-coordinate: 2.68, Y-coordinate (Height): 96.4, Color: #1f77b4\n    *   **Claude 3:** X-coordinate: 2.84, Y-coordinate (Height): 93.5, Color: #ff7f0e\n    *   **Gemini:** X-coordinate: 3.00, Y-coordinate (Height): 89.8, Color: #2ca02c\n    *   **Llama 3:** X-coordinate: 3.16, Y-coordinate (Height): 83.4, Color: #d62728\n    *   **Mistral:** X-coordinate: 3.32, Y-coordinate (Height): 78.6, Color: #9467bd\n\n**Legend:**\n\n*   **Location:** Top right, *inside* the main plot area, aligned horizontally, to maximize the data-ink ratio.\n*   **Entries:** Clearly displays each model name (\"GPT-4o\", \"Claude 3\", \"Gemini\", \"Llama 3\", \"Mistral\") with its corresponding color swatch (a small square of the assigned color).\n*   **Font Family:** Sans-Serif (e.g., 'Arial', 'Helvetica', or 'DejaVu Sans')\n*   **Font Size:** 10pt\n*   **Frame:** Light gray (#e0e0e0) border, 0.5pt thickness.\n\n**Grid:**\n\n*   **Y-axis Grid Lines:** Enabled, light gray (#cccccc), fine dashed style (e.g., a dash pattern of points), spanning across the entire plot area, and rendered *behind* data elements (low Z-order).\n*   **X-axis Grid Lines:** Disabled for clarity between benchmark groups.\n\n**Overall Aesthetic:**\n\n*   **Figure Size:** Approximately 10 inches (width) by 6 inches (height) for optimal readability.\n*   **Background Color:** Stark white (#ffffff) for maximum contrast.\n*   **Font Family:** Exclusively Sans-Serif (e.g., 'Arial', 'Helvetica', or 'DejaVu Sans') used consistently for all text elements.\n\nThis detailed description ensures the plot is both accurate in its data representation and aesthetically pleasing, providing clear comparisons of LLM performance across benchmarks, while adhering to NeurIPS 2025 aesthetic standards for precision, accessibility, and high contrast.",
+    "total_iterations": 1,
+    "metadata": {
+      "run_id": "run_20260228_132724_6cd779",
+      "timestamp": "2026-02-28T13:30:08.142504",
+      "vlm_provider": "kie",
+      "vlm_model": "gemini-2.5-flash",
+      "image_provider": "kie_nano_banana",
+      "image_model": "google/nano-banana",
+      "refinement_iterations": 1,
+      "seed": null,
+      "config_snapshot": {
+        "vlm_provider": "kie",
+        "vlm_model": "gemini-2.5-flash",
+        "image_provider": "kie_nano_banana",
+        "image_model": "google/nano-banana",
+        "num_retrieval_examples": 10,
+        "refinement_iterations": 2,
+        "auto_refine": false,
+        "max_iterations": 30,
+        "optimize_inputs": false,
+        "output_resolution": "2k",
+        "reference_set_path": "data/reference_sets",
+        "guidelines_path": "data/guidelines",
+        "output_dir": "outputs/api_tasks/6f68c7c0b690",
+        "output_format": "png",
+        "save_iterations": true,
+        "api_max_concurrent_tasks": 3,
+        "api_task_ttl_minutes": 120,
+        "paperbanana_api_token": "***REDACTED***",
+        "openai_base_url": "https://api.openai.com/v1",
+        "openai_vlm_model": "gpt-5.2",
+        "openai_image_model": "gpt-image-1.5",
+        "skip_ssl_verification": false
+      },
+      "timing": {
+        "total_seconds": 164.03761723998468,
+        "optimize_seconds": 0.0,
+        "retrieval_seconds": 10.448244735016488,
+        "planning_seconds": 39.90156783093698,
+        "styling_seconds": 22.107980295084417,
+        "iterations": [
+          {
+            "iteration": 1,
+            "visualizer_seconds": 54.042169518070295,
+            "critic_seconds": 37.50128751399461
+          }
+        ]
+      }
+    },
+    "scores": null
+  },
+  "error": null
+}
