@@ -10,6 +10,11 @@ tags_metadata = [
 description = """
 PaperBanana HTTP API：将生成、续跑、评测能力统一封装为异步任务接口。
 
+当前部署说明：
+- 当前实例仅启用 KIE 通道
+- 建议固定使用：vlm_provider=kie（gemini-2.5-flash）
+- image_provider=kie_nano_banana（google/nano-banana）
+
 通用流程：
 1. 提交任务（POST）
 2. 轮询状态（GET /api/v1/tasks/{task_id}）
@@ -26,10 +31,10 @@ request_examples = {
             "optimize_inputs": True,
             "aspect_ratio": "16:9",
             "providers": {
-                "vlm_provider": "openai",
-                "vlm_model": "gpt-5.2",
-                "image_provider": "openai_imagen",
-                "image_model": "gpt-image-1.5",
+                "vlm_provider": "kie",
+                "vlm_model": "gemini-2.5-flash",
+                "image_provider": "kie_nano_banana",
+                "image_model": "google/nano-banana",
             },
         },
     },
@@ -46,9 +51,9 @@ request_examples = {
             "aspect_ratio": "4:3",
             "providers": {
                 "vlm_provider": "kie",
-                "vlm_model": "gemini-2.5-pro",
+                "vlm_model": "gemini-2.5-flash",
                 "image_provider": "kie_nano_banana",
-                "image_model": "google/nano-banana-v2",
+                "image_model": "google/nano-banana",
             },
         },
     },
@@ -60,10 +65,10 @@ request_examples = {
             "user_feedback": "把箭头更粗一些，阶段颜色区分更明显。",
             "aspect_ratio": "21:9",
             "providers": {
-                "vlm_provider": "openrouter",
-                "vlm_model": "google/gemini-2.5-pro",
-                "image_provider": "openai_imagen",
-                "image_model": "gpt-image-1.5",
+                "vlm_provider": "kie",
+                "vlm_model": "gemini-2.5-flash",
+                "image_provider": "kie_nano_banana",
+                "image_model": "google/nano-banana",
             },
         },
     },

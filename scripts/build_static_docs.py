@@ -86,19 +86,16 @@ _FIELD_DESC_MAP = {
     "auto_refine": "是否自动迭代到满意",
     "max_iterations": "最大迭代次数",
     "output_format": "输出图片格式（png/jpeg/webp）",
-    "providers": "按任务覆盖供应商与模型配置",
-    "providers.vlm_provider": "覆盖 VLM 供应商（gemini/openrouter/openai/kie）",
-    "providers.vlm_model": "覆盖 VLM 模型",
-    "providers.image_provider": (
-        "覆盖图像供应商（google_imagen/openrouter_imagen/openai_imagen/"
-        "kie_nano_banana/kie）"
-    ),
-    "providers.image_model": "覆盖图像模型",
+    "providers": "按任务覆盖供应商与模型配置（当前部署仅支持 KIE）",
+    "providers.vlm_provider": "覆盖 VLM 供应商（当前仅支持 kie）",
+    "providers.vlm_model": "覆盖 VLM 模型（建议 gemini-2.5-flash）",
+    "providers.image_provider": "覆盖图像供应商（当前仅支持 kie_nano_banana / kie）",
+    "providers.image_model": "覆盖图像模型（建议 google/nano-banana）",
     "generated_image": "待评测生成图文件",
     "reference_image": "参考图文件",
     "caption": "图表标题",
-    "vlm_provider": "评测时覆盖 VLM 供应商（gemini/openrouter/openai/kie）",
-    "vlm_model": "评测时覆盖 VLM 模型",
+    "vlm_provider": "评测时覆盖 VLM 供应商（当前仅支持 kie）",
+    "vlm_model": "评测时覆盖 VLM 模型（建议 gemini-2.5-flash）",
 }
 
 
