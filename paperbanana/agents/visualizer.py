@@ -161,9 +161,12 @@ class VisualizerAgent(BaseAgent):
         logger.info("Plot code saved", path=str(code_path))
 
         for attempt in range(1, max_attempts + 1):
-            success, error_message = self._execute_plot_code(
-                current_code, output_path, aspect_ratio
-            )
+            if aspect_ratio:
+                success, error_message = self._execute_plot_code(
+                    current_code, output_path, aspect_ratio
+                )
+            else:
+                success, error_message = self._execute_plot_code(current_code, output_path)
             if success:
                 return output_path
 
