@@ -1,4 +1,4 @@
-"""KIE VLM provider — OpenAI-compatible chat API for Gemini 2.5 Flash."""
+"""KIE VLM provider — OpenAI-compatible chat API for Gemini models."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ class KieVLM(VLMProvider):
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model: str = "gemini-2.5-flash",
+        model: str = "gemini-3-pro",
         base_url: str = "https://api.kie.ai",
     ):
         self._api_key = api_key

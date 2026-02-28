@@ -96,7 +96,7 @@ class Settings(BaseSettings):
     kie_api_key: Optional[str] = Field(default=None, alias="KIE_API_KEY")
 
     # Provider-specific compatibility defaults
-    kie_default_vlm_model: str = "gemini-2.5-flash"
+    kie_default_vlm_model: str = "gemini-3-pro"
     kie_default_image_model: str = "google/nano-banana"
     kie_default_image_model_pro: str = "nano-banana-pro"
 

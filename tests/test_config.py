@@ -68,10 +68,13 @@ def test_output_format_from_yaml_invalid():
         Path(path).unlink(missing_ok=True)
 
 
-def test_effective_vlm_model_kie_uses_legacy_default():
-    """KIE keeps legacy default model when no override is supplied."""
-    settings = Settings(vlm_provider="kie")
-    assert settings.effective_vlm_model == "gemini-2.5-flash"
+def test_effective_vlm_model_kie_uses_default():
+    """KIE keeps default model when no override is supplied."""
+    settings = Settings(
+        vlm_provider="kie",
+        vlm_model=Settings.model_fields["vlm_model"].default,
+    )
+    assert settings.effective_vlm_model == "gemini-3-pro"
 
 
 def test_effective_vlm_model_kie_uses_override():

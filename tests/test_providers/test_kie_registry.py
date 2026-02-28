@@ -9,14 +9,15 @@ from paperbanana.providers.registry import ProviderRegistry
 
 
 def test_create_kie_vlm():
-    """Registry creates KIE VLM with legacy default model."""
+    """Registry creates KIE VLM with default model."""
     settings = Settings(
         vlm_provider="kie",
+        vlm_model=Settings.model_fields["vlm_model"].default,
         kie_api_key="test-key",
     )
     vlm = ProviderRegistry.create_vlm(settings)
     assert vlm.name == "kie"
-    assert vlm.model_name == "gemini-2.5-flash"
+    assert vlm.model_name == "gemini-3-pro"
 
 
 def test_create_kie_vlm_with_override_model():

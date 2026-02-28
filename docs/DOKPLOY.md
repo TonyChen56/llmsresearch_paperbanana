@@ -21,7 +21,7 @@ KIE_API_KEY=your-kie-key
 可选环境变量：
 
 ```bash
-VLM_MODEL=gemini-2.5-flash
+VLM_MODEL=gemini-3-pro
 IMAGE_MODEL=google/nano-banana
 API_MAX_CONCURRENT_TASKS=3
 API_TASK_TTL_MINUTES=120
